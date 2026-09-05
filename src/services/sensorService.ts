@@ -298,10 +298,16 @@ export async function fetchNodeHistory(
 export function subscribeToReadings(
   onUpdate: (readings: SensorReading[]) => void,
 ): () => void {
-  if (isSupabaseConfigured) {
-    // Realtime postgres_changes is not wired yet; use the mock interval so the
-    // dashboard still streams until Person 1 enables Supabase Realtime.
-    return subscribeToMockReadings(onUpdate);
+  if (isSupabaseConfigured && supabase !== null) {
+    const channel = supabase.channel('sensor_readings_changes')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sensor_readings' },
+        (payload) => {
+          fetchLatestReadings().then(onUpdate).catch(console.error);
+        })
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
   }
 
   return subscribeToMockReadings(onUpdate);
