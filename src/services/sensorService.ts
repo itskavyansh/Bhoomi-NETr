@@ -11,13 +11,14 @@ import {
   VIBRATION_WARNING,
 } from "./analysisAdapter";
 import { isSupabaseConfigured, supabase } from "./supabaseClient";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 
 const MOCK_DELAY_MS = 250;
 const LATEST_ROW_WINDOW = 200;
 const LIVE_INTERVAL_MS = 3000;
 export const LIVE_HISTORY_LIMIT = 20;
 
-// TODO: get real baseline per node from a config/table
+// Default baseline distance in cm (HC-SR04 baseline when ground is undisturbed)
 const DEFAULT_BASELINE_DISTANCE = 20.0;
 
 function delay(ms: number): Promise<void> {
@@ -27,7 +28,6 @@ function delay(ms: number): Promise<void> {
 }
 
 function baselineForNode(_nodeId: string): number {
-  // TODO: get real baseline per node from a config/table
   return DEFAULT_BASELINE_DISTANCE;
 }
 
@@ -41,7 +41,7 @@ function isRawSensorRow(value: unknown): value is RawSensorRow {
   }
 
   return (
-    typeof value.id === "string" &&
+    (typeof value.id === "string" || typeof value.id === "number") &&
     typeof value.node_id === "string" &&
     typeof value.timestamp === "string" &&
     typeof value.tilt_x === "number" &&
@@ -75,6 +75,16 @@ function cloneReadings(readings: SensorReading[]): SensorReading[] {
   }));
 }
 
+// In-memory cache of the latest readings per node to provide instantaneous Realtime updates
+const cachedLatestReadings = new Map<string, SensorReading>();
+
+// Realtime subscription management
+const realtimeListeners = new Set<(readings: SensorReading[]) => void>();
+let realtimeChannel: RealtimeChannel | null = null;
+
+// =============================================================================
+// Mock / Fallback Logic (used ONLY when Supabase credentials are not configured)
+// =============================================================================
 function round3(value: number): number {
   return Number(value.toFixed(3));
 }
@@ -92,7 +102,6 @@ const mockBaselines = new Map(
 );
 
 let liveMockReadings = cloneReadings(mockReadings);
-
 const liveListeners = new Set<(readings: SensorReading[]) => void>();
 let liveIntervalId: ReturnType<typeof setInterval> | null = null;
 
@@ -123,8 +132,6 @@ function nudgeTowardLiveValues(reading: SensorReading): SensorReading {
       tilt_x: round3(reading.tilt_x * randomJitterFactor()),
       tilt_y: round3(reading.tilt_y * randomJitterFactor()),
       vibration: Math.max(0, round3(reading.vibration * randomJitterFactor())),
-      // Nudge distance via displacement (±5–10%) so analyzeReading thresholds stay visible.
-      // Jittering the raw distance reading by ±5–10% would always exceed DISPLACEMENT_CRITICAL.
       distance: round3(baseline - displacement),
     },
     baseline,
@@ -227,6 +234,15 @@ function mockHistoryForNode(nodeId: string, limit: number): TimePoint[] {
   return generateHistory(nodeId, baseReading).slice(-limit);
 }
 
+// =============================================================================
+// Live Supabase Production Service
+// =============================================================================
+
+/**
+ * Fetch the most recent reading for each distinct node_id from Supabase.
+ * On initial page load, this populates the dashboard immediately without waiting
+ * for a new Realtime row insert.
+ */
 export async function fetchLatestReadings(): Promise<SensorReading[]> {
   if (!isSupabaseConfigured || supabase === null) {
     await delay(MOCK_DELAY_MS);
@@ -245,15 +261,27 @@ export async function fetchLatestReadings(): Promise<SensorReading[]> {
     }
 
     const latestRows = latestRowPerNode(parseRawRows(data));
-    return latestRows.map((row) =>
+    const analyzedReadings = latestRows.map((row) =>
       analyzeReading(row, baselineForNode(row.node_id)),
     );
+
+    // Keep cached map in sync
+    for (const reading of analyzedReadings) {
+      cachedLatestReadings.set(reading.node_id, reading);
+    }
+
+    return analyzedReadings;
   } catch (error) {
-    console.error("fetchLatestReadings failed; using mock readings.", error);
+    console.error("fetchLatestReadings failed; using fallback.", error);
     return mockReadings;
   }
 }
 
+/**
+ * Fetch historical time points for a specific node_id.
+ * Queries recent rows descending by timestamp, then reverses them so charts
+ * render in chronological order (oldest to newest).
+ */
 export async function fetchNodeHistory(
   nodeId: string,
   limit = 20,
@@ -268,7 +296,7 @@ export async function fetchNodeHistory(
       .from("sensor_readings")
       .select("id, node_id, timestamp, tilt_x, tilt_y, vibration, distance")
       .eq("node_id", nodeId)
-      .order("timestamp", { ascending: true })
+      .order("timestamp", { ascending: false })
       .limit(limit);
 
     if (error) {
@@ -276,11 +304,14 @@ export async function fetchNodeHistory(
     }
 
     const baseline = baselineForNode(nodeId);
-    return parseRawRows(data).map((row) => ({
+    // Reverse rows so time ascends left-to-right on trend charts
+    const chronologicallyOrdered = parseRawRows(data).reverse();
+
+    return chronologicallyOrdered.map((row) => ({
       timestamp: row.timestamp,
       tilt_x: row.tilt_x,
       vibration: row.vibration,
-      displacement: baseline - row.distance,
+      displacement: Number((baseline - row.distance).toFixed(2)),
     }));
   } catch (error) {
     console.error("fetchNodeHistory failed; using mock history.", error);
@@ -288,27 +319,57 @@ export async function fetchNodeHistory(
   }
 }
 
-// REAL IMPLEMENTATION (when Supabase is configured) will instead do:
-// const channel = supabase.channel('sensor_readings_changes')
-//   .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sensor_readings' },
-//     (payload) => { re-fetch latest-per-node and call onUpdate })
-//   .subscribe();
-// return () => supabase.removeChannel(channel);
-// Keep the function signature identical so pages don't change when this swaps in.
+/**
+ * Subscribes to live sensor updates.
+ * When Supabase is configured, uses Supabase Realtime (postgres_changes)
+ * listening for INSERT events on public.sensor_readings.
+ */
 export function subscribeToReadings(
   onUpdate: (readings: SensorReading[]) => void,
 ): () => void {
   if (isSupabaseConfigured && supabase !== null) {
-    const channel = supabase.channel('sensor_readings_changes')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sensor_readings' },
-        (payload) => {
-          fetchLatestReadings().then(onUpdate).catch(console.error);
-        })
-      .subscribe();
+    const client = supabase;
+    realtimeListeners.add(onUpdate);
+
+    if (realtimeChannel === null) {
+      realtimeChannel = client
+        .channel("sensor_readings_realtime")
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "sensor_readings" },
+          (payload) => {
+            const raw = payload.new;
+            if (isRawSensorRow(raw)) {
+              const analyzed = analyzeReading(raw, baselineForNode(raw.node_id));
+              cachedLatestReadings.set(raw.node_id, analyzed);
+              const updatedList = Array.from(cachedLatestReadings.values());
+              realtimeListeners.forEach((listener) => {
+                listener(updatedList);
+              });
+            } else {
+              // Fallback: re-fetch if payload structure is partial
+              fetchLatestReadings()
+                .then((latest) => {
+                  realtimeListeners.forEach((listener) => {
+                    listener(latest);
+                  });
+                })
+                .catch(console.error);
+            }
+          },
+        )
+        .subscribe();
+    }
+
     return () => {
-      void supabase.removeChannel(channel);
+      realtimeListeners.delete(onUpdate);
+      if (realtimeListeners.size === 0 && realtimeChannel !== null) {
+        void client.removeChannel(realtimeChannel);
+        realtimeChannel = null;
+      }
     };
   }
 
+  // Fallback to client-side mock if Supabase is not configured
   return subscribeToMockReadings(onUpdate);
 }

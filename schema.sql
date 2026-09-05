@@ -74,6 +74,9 @@ CREATE INDEX IF NOT EXISTS idx_sensor_readings_node_ts
 -- -----------------------------------------------------------------------------
 ALTER TABLE public.sensor_readings DISABLE ROW LEVEL SECURITY;
 
+-- Enable Realtime for live dashboard streaming
+ALTER PUBLICATION supabase_realtime ADD TABLE public.sensor_readings;
+
 -- -----------------------------------------------------------------------------
 -- VERIFICATION QUERY (run this after creating the table to confirm structure)
 -- -----------------------------------------------------------------------------
