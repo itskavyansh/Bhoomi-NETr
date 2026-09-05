@@ -1,31 +1,13 @@
-import { mockReadings } from "../data/mockData";
-import { generateHistory } from "../data/mockHistory";
 import type { RawSensorRow, SensorReading, TimePoint } from "../types/sensor";
-import {
-  analyzeReading,
-  DISPLACEMENT_CRITICAL,
-  DISPLACEMENT_WARNING,
-  TILT_CRITICAL,
-  TILT_WARNING,
-  VIBRATION_CRITICAL,
-  VIBRATION_WARNING,
-} from "./analysisAdapter";
+import { analyzeReading } from "./analysisAdapter";
 import { isSupabaseConfigured, supabase } from "./supabaseClient";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
-const MOCK_DELAY_MS = 250;
 const LATEST_ROW_WINDOW = 200;
-const LIVE_INTERVAL_MS = 3000;
 export const LIVE_HISTORY_LIMIT = 20;
 
 // Default baseline distance in cm (HC-SR04 baseline when ground is undisturbed)
 const DEFAULT_BASELINE_DISTANCE = 20.0;
-
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
 
 function baselineForNode(_nodeId: string): number {
   return DEFAULT_BASELINE_DISTANCE;
@@ -68,171 +50,12 @@ function latestRowPerNode(rows: RawSensorRow[]): RawSensorRow[] {
   return Array.from(latestByNode.values());
 }
 
-function cloneReadings(readings: SensorReading[]): SensorReading[] {
-  return readings.map((reading) => ({
-    ...reading,
-    warnings: [...reading.warnings],
-  }));
-}
-
 // In-memory cache of the latest readings per node to provide instantaneous Realtime updates
 const cachedLatestReadings = new Map<string, SensorReading>();
 
 // Realtime subscription management
 const realtimeListeners = new Set<(readings: SensorReading[]) => void>();
 let realtimeChannel: RealtimeChannel | null = null;
-
-// =============================================================================
-// Mock / Fallback Logic (used ONLY when Supabase credentials are not configured)
-// =============================================================================
-function round3(value: number): number {
-  return Number(value.toFixed(3));
-}
-
-function randomJitterFactor(): number {
-  const magnitude = 0.05 + Math.random() * 0.05;
-  return Math.random() < 0.5 ? 1 - magnitude : 1 + magnitude;
-}
-
-const mockBaselines = new Map(
-  mockReadings.map((reading) => [
-    reading.node_id,
-    reading.distance + reading.displacement,
-  ]),
-);
-
-let liveMockReadings = cloneReadings(mockReadings);
-const liveListeners = new Set<(readings: SensorReading[]) => void>();
-let liveIntervalId: ReturnType<typeof setInterval> | null = null;
-
-function mockBaselineForNode(nodeId: string): number {
-  return mockBaselines.get(nodeId) ?? DEFAULT_BASELINE_DISTANCE;
-}
-
-function toRawRow(reading: SensorReading, timestamp: string): RawSensorRow {
-  return {
-    id: reading.node_id,
-    node_id: reading.node_id,
-    timestamp,
-    tilt_x: reading.tilt_x,
-    tilt_y: reading.tilt_y,
-    vibration: reading.vibration,
-    distance: reading.distance,
-  };
-}
-
-function nudgeTowardLiveValues(reading: SensorReading): SensorReading {
-  const timestamp = new Date().toISOString();
-  const baseline = mockBaselineForNode(reading.node_id);
-  const displacement = reading.displacement * randomJitterFactor();
-
-  return analyzeReading(
-    {
-      ...toRawRow(reading, timestamp),
-      tilt_x: round3(reading.tilt_x * randomJitterFactor()),
-      tilt_y: round3(reading.tilt_y * randomJitterFactor()),
-      vibration: Math.max(0, round3(reading.vibration * randomJitterFactor())),
-      distance: round3(baseline - displacement),
-    },
-    baseline,
-  );
-}
-
-function pushNodePastThreshold(reading: SensorReading): SensorReading {
-  const timestamp = new Date().toISOString();
-  const baseline = mockBaselineForNode(reading.node_id);
-  const mode = Math.floor(Math.random() * 3);
-
-  if (mode === 0) {
-    return analyzeReading(
-      {
-        ...toRawRow(reading, timestamp),
-        tilt_x: round3(2 + Math.random()),
-        tilt_y: round3(-1 + Math.random()),
-        vibration: round3(0.15 + Math.random() * 0.1),
-        distance: round3(baseline - 0.2),
-      },
-      baseline,
-    );
-  }
-
-  if (mode === 1) {
-    return analyzeReading(
-      {
-        ...toRawRow(reading, timestamp),
-        tilt_x: round3(TILT_WARNING + 1 + Math.random()),
-        tilt_y: round3(reading.tilt_y * randomJitterFactor()),
-        vibration: round3(VIBRATION_WARNING * 0.5),
-        distance: round3(baseline - DISPLACEMENT_WARNING * 0.4),
-      },
-      baseline,
-    );
-  }
-
-  return analyzeReading(
-    {
-      ...toRawRow(reading, timestamp),
-      tilt_x: round3(TILT_CRITICAL + Math.random() * 3),
-      tilt_y: round3(reading.tilt_y * randomJitterFactor()),
-      vibration: round3(VIBRATION_CRITICAL + Math.random() * 0.3),
-      distance: round3(baseline - (DISPLACEMENT_CRITICAL + Math.random())),
-    },
-    baseline,
-  );
-}
-
-function tickLiveMockReadings(): void {
-  const shouldSpike = Math.random() < 0.2;
-  const spikeIndex = shouldSpike
-    ? Math.floor(Math.random() * liveMockReadings.length)
-    : -1;
-
-  liveMockReadings = liveMockReadings.map((reading, index) =>
-    index === spikeIndex
-      ? pushNodePastThreshold(reading)
-      : nudgeTowardLiveValues(reading),
-  );
-}
-
-function startMockLiveInterval(): void {
-  if (liveIntervalId !== null) {
-    return;
-  }
-
-  liveIntervalId = setInterval(() => {
-    tickLiveMockReadings();
-    liveListeners.forEach((listener) => {
-      listener(cloneReadings(liveMockReadings));
-    });
-  }, LIVE_INTERVAL_MS);
-}
-
-function subscribeToMockReadings(
-  onUpdate: (readings: SensorReading[]) => void,
-): () => void {
-  liveListeners.add(onUpdate);
-  startMockLiveInterval();
-
-  return () => {
-    liveListeners.delete(onUpdate);
-    if (liveListeners.size === 0 && liveIntervalId !== null) {
-      clearInterval(liveIntervalId);
-      liveIntervalId = null;
-    }
-  };
-}
-
-function mockHistoryForNode(nodeId: string, limit: number): TimePoint[] {
-  const baseReading =
-    mockReadings.find((reading) => reading.node_id === nodeId) ??
-    mockReadings[0];
-
-  if (!baseReading) {
-    return [];
-  }
-
-  return generateHistory(nodeId, baseReading).slice(-limit);
-}
 
 // =============================================================================
 // Live Supabase Production Service
@@ -245,8 +68,7 @@ function mockHistoryForNode(nodeId: string, limit: number): TimePoint[] {
  */
 export async function fetchLatestReadings(): Promise<SensorReading[]> {
   if (!isSupabaseConfigured || supabase === null) {
-    await delay(MOCK_DELAY_MS);
-    return cloneReadings(liveMockReadings);
+    return Array.from(cachedLatestReadings.values());
   }
 
   try {
@@ -273,8 +95,8 @@ export async function fetchLatestReadings(): Promise<SensorReading[]> {
 
     return analyzedReadings;
   } catch (error) {
-    console.error("fetchLatestReadings failed; using fallback.", error);
-    return mockReadings;
+    console.error("fetchLatestReadings failed:", error);
+    return Array.from(cachedLatestReadings.values());
   }
 }
 
@@ -288,8 +110,7 @@ export async function fetchNodeHistory(
   limit = 20,
 ): Promise<TimePoint[]> {
   if (!isSupabaseConfigured || supabase === null) {
-    await delay(MOCK_DELAY_MS);
-    return mockHistoryForNode(nodeId, limit);
+    return [];
   }
 
   try {
@@ -316,8 +137,8 @@ export async function fetchNodeHistory(
       displacement: Number((baseline - row.distance).toFixed(2)),
     }));
   } catch (error) {
-    console.error("fetchNodeHistory failed; using mock history.", error);
-    return mockHistoryForNode(nodeId, limit);
+    console.error("fetchNodeHistory failed:", error);
+    return [];
   }
 }
 
@@ -372,6 +193,6 @@ export function subscribeToReadings(
     };
   }
 
-  // Fallback to client-side mock if Supabase is not configured
-  return subscribeToMockReadings(onUpdate);
+  // No-op if Supabase is not configured
+  return () => {};
 }
