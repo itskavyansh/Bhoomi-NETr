@@ -1,3 +1,10 @@
+// =============================================================================
+// WARNING / SYNC RISK:
+// These threshold values are duplicated from engine/thresholds.py and must be
+// manually kept in sync until the team decides on a single source of truth for
+// analysis logic.
+// Do not change the values here independently without updating engine/thresholds.py.
+// =============================================================================
 // Analysis adapter synchronizing Person 2's Python engine thresholds and risk logic
 // directly with the frontend dashboard until the live backend analysis table/queue is wired.
 // Contract: { node_id, status, risk_score, warnings, displacement }
