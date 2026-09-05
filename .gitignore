@@ -19,3 +19,8 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# Temporary test bridge artifacts
+temp.json
+*.log
+scripts/testing/logs/
