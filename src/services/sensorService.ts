@@ -253,6 +253,7 @@ export async function fetchLatestReadings(): Promise<SensorReading[]> {
     const { data, error } = await supabase
       .from("sensor_readings")
       .select("id, node_id, timestamp, tilt_x, tilt_y, vibration, distance")
+      .lte("timestamp", new Date().toISOString())
       .order("timestamp", { ascending: false })
       .limit(LATEST_ROW_WINDOW);
 
@@ -296,6 +297,7 @@ export async function fetchNodeHistory(
       .from("sensor_readings")
       .select("id, node_id, timestamp, tilt_x, tilt_y, vibration, distance")
       .eq("node_id", nodeId)
+      .lte("timestamp", new Date().toISOString())
       .order("timestamp", { ascending: false })
       .limit(limit);
 

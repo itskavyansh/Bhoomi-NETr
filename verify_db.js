@@ -22,7 +22,7 @@ async function run() {
   // STEP 2 — insert data-contract test row
   const payload = {
     node_id: "NODE_01",
-    timestamp: "2026-09-05T12:30:00Z",
+    timestamp: new Date().toISOString(),
     tilt_x: 7.2,
     tilt_y: 3.8,
     vibration: 0.34,
