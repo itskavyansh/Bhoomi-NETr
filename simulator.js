@@ -39,10 +39,19 @@ function loadEnv() {
 loadEnv();
 
 // ---------------------------------------------------------------------------
-// Config — edit NODES to add more nodes; everything else via CLI flags
+// Config & CLI arg parsing
 // ---------------------------------------------------------------------------
 const NODES = ["NODE_01", "NODE_02", "NODE_03"];
-const INTERVAL = 2000; // ms between ticks
+
+const args = process.argv.slice(2);
+const getFlag = (name) => {
+    const match = args.find((a) => a.startsWith(`--${name}=`));
+    return match ? match.split("=")[1] : null;
+};
+
+// Interval between ticks in milliseconds: default 1000ms (1s), or customizable via --interval=<ms>
+const parsedInterval = Number(getFlag("interval"));
+const INTERVAL = !Number.isNaN(parsedInterval) && parsedInterval > 0 ? parsedInterval : 1000;
 
 const ENDPOINT = process.env.SUPABASE_URL
     ? `${process.env.SUPABASE_URL}/functions/v1/sensor-data`
@@ -53,15 +62,6 @@ if (!ENDPOINT || !ANON_KEY) {
     console.error("[FATAL] SUPABASE_URL or SUPABASE_ANON_KEY missing from .env");
     process.exit(1);
 }
-
-// ---------------------------------------------------------------------------
-// CLI arg parsing
-// ---------------------------------------------------------------------------
-const args = process.argv.slice(2);
-const getFlag = (name) => {
-    const match = args.find((a) => a.startsWith(`--${name}=`));
-    return match ? match.split("=")[1] : null;
-};
 
 const SCENARIO = getFlag("scenario") ?? "normal";
 const TARGET_NODE = getFlag("node") ?? null;
