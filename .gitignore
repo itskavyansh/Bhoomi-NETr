@@ -1,0 +1,21 @@
+# =============================================================================
+# Bhoomi-NETr  —  .gitignore
+# =============================================================================
+
+# Environment / secrets — NEVER commit real credentials
+.env
+.env.local
+.env.*.local
+
+# Node
+node_modules/
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp

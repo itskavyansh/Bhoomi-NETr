@@ -1,0 +1,17 @@
+{
+    "name": "bhoomi-netr",
+    "version": "1.0.0",
+    "description": "Mine subsidence monitoring — backend simulation and tooling",
+    "type": "module",
+    "scripts": {
+        "simulate": "node simulator.js",
+        "simulate:tilt": "node simulator.js --scenario=excessive_tilt",
+        "simulate:vibration": "node simulator.js --scenario=high_vibration",
+        "simulate:critical": "node simulator.js --scenario=critical",
+        "verify": "node verify_db.js",
+        "test": "node test_function.js"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    }
+}

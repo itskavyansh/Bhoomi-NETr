@@ -1,0 +1,19 @@
+
+────────────────────────────────────────────────────────────────────────
+  Bhoomi-NETr Simulator  |  scenario=normal  nodes=[NODE_01, NODE_02, NODE_03]
+  Endpoint : https://bnnrikqlhvcqpuqsujsf.supabase.co/functions/v1/sensor-data
+  Interval : 2s   Press Ctrl+C to stop
+────────────────────────────────────────────────────────────────────────
+
+✅ 2026-09-05 08:46:07  [90mΔ0.00s[0m  [36mNODE_01[0m  tilt_x=3.63°  tilt_y=4.62°  vib=0.151g  dist=19.86cm  HTTP [32m201[0m  (1241ms)
+✅ 2026-09-05 08:46:09  [90mΔ2.02s[0m  [36mNODE_02[0m  tilt_x=3.42°  tilt_y=4.21°  vib=0.123g  dist=19.68cm  HTTP [32m201[0m  (484ms)
+✅ 2026-09-05 08:46:11  [90mΔ2.01s[0m  [36mNODE_03[0m  tilt_x=4.03°  tilt_y=3.87°  vib=0.118g  dist=19.99cm  HTTP [32m201[0m  (569ms)
+✅ 2026-09-05 08:46:13  [90mΔ2.01s[0m  [36mNODE_01[0m  tilt_x=3.79°  tilt_y=4.86°  vib=0.164g  dist=19.66cm  HTTP [32m201[0m  (331ms)
+✅ 2026-09-05 08:46:15  [90mΔ2.01s[0m  [36mNODE_02[0m  tilt_x=3.26°  tilt_y=4.30°  vib=0.130g  dist=19.69cm  HTTP [32m201[0m  (373ms)
+✅ 2026-09-05 08:46:17  [90mΔ2.00s[0m  [36mNODE_03[0m  tilt_x=3.77°  tilt_y=3.71°  vib=0.120g  dist=20.00cm  HTTP [32m201[0m  (325ms)
+✅ 2026-09-05 08:46:19  [90mΔ2.01s[0m  [36mNODE_01[0m  tilt_x=4.08°  tilt_y=5.00°  vib=0.168g  dist=19.85cm  HTTP [32m201[0m  (386ms)
+✅ 2026-09-05 08:46:21  [90mΔ2.01s[0m  [36mNODE_02[0m  tilt_x=3.06°  tilt_y=4.47°  vib=0.149g  dist=19.83cm  HTTP [32m201[0m  (365ms)
+✅ 2026-09-05 08:46:23  [90mΔ2.00s[0m  [36mNODE_03[0m  tilt_x=4.03°  tilt_y=3.84°  vib=0.119g  dist=20.01cm  HTTP [32m201[0m  (304ms)
+✅ 2026-09-05 08:46:25  [90mΔ2.00s[0m  [36mNODE_01[0m  tilt_x=4.14°  tilt_y=5.21°  vib=0.159g  dist=20.02cm  HTTP [32m201[0m  (594ms)
+✅ 2026-09-05 08:46:27  [90mΔ2.01s[0m  [36mNODE_02[0m  tilt_x=2.93°  tilt_y=4.75°  vib=0.162g  dist=19.90cm  HTTP [32m201[0m  (537ms)
+✅ 2026-09-05 08:46:29  [90mΔ2.01s[0m  [36mNODE_03[0m  tilt_x=4.28°  tilt_y=3.62°  vib=0.128g  dist=20.19cm  HTTP [32m201[0m  (309ms)
