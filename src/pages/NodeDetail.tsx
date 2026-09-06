@@ -19,7 +19,9 @@ function toTimePoint(reading: SensorReading): TimePoint {
   return {
     timestamp: reading.timestamp,
     tilt_x: reading.tilt_x,
+    tilt_y: reading.tilt_y,
     vibration: reading.vibration,
+    distance: reading.distance,
     displacement: reading.displacement,
   };
 }
@@ -144,13 +146,20 @@ export function NodeDetail() {
               </div>
             </header>
 
-            <div className="grid grid-cols-2 gap-6 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
               <MetricTile 
-                label="Tilt" 
+                label="Tilt X" 
                 value={reading.tilt_x} 
                 unit="°" 
                 size="lg" 
-                activeFlags={reading.warnings.filter(w => w === "EXCESSIVE_TILT")} 
+                activeFlags={Math.abs(reading.tilt_x) >= 15 ? reading.warnings.filter(w => w === "EXCESSIVE_TILT") : []} 
+              />
+              <MetricTile 
+                label="Tilt Y" 
+                value={reading.tilt_y} 
+                unit="°" 
+                size="lg" 
+                activeFlags={Math.abs(reading.tilt_y) >= 15 ? reading.warnings.filter(w => w === "EXCESSIVE_TILT") : []} 
               />
               <MetricTile
                 label="Vibration"
@@ -196,13 +205,20 @@ export function NodeDetail() {
               <h2 className="mb-6 text-xl font-bold tracking-tight text-slate-100 text-left">
                 Historical Trends
               </h2>
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                 <TrendChart
                   data={history}
                   dataKey="tilt_x"
-                  label="Tilt"
+                  label="Tilt X"
                   unit="°"
                   color="#2563eb"
+                />
+                <TrendChart
+                  data={history}
+                  dataKey="tilt_y"
+                  label="Tilt Y"
+                  unit="°"
+                  color="#7c3aed"
                 />
                 <TrendChart
                   data={history}
@@ -210,6 +226,13 @@ export function NodeDetail() {
                   label="Vibration"
                   unit="g"
                   color="#d97706"
+                />
+                <TrendChart
+                  data={history}
+                  dataKey="distance"
+                  label="Distance"
+                  unit="cm"
+                  color="#0d9488"
                 />
                 <TrendChart
                   data={history}

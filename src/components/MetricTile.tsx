@@ -28,7 +28,7 @@ export function MetricTile({
   let severity: "NORMAL" | "WARNING" | "CRITICAL" = "NORMAL";
   let warnThreshold: number | null = null;
   
-  if (label.toLowerCase() === "tilt") {
+  if (label.toLowerCase().includes("tilt")) {
     warnThreshold = TILT_WARNING;
     if (Math.abs(value) >= TILT_CRITICAL) severity = "CRITICAL";
     else if (Math.abs(value) >= TILT_WARNING) severity = "WARNING";

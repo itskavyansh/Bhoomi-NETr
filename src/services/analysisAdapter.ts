@@ -28,7 +28,9 @@ export function analyzeReading(
   raw: RawSensorRow,
   baselineDistance: number,
 ): SensorReading {
-  const displacement = Number((baselineDistance - raw.distance).toFixed(2));
+  const displacement = Number(
+    Math.abs(baselineDistance - raw.distance).toFixed(2),
+  );
   const tiltMagnitude = Math.max(Math.abs(raw.tilt_x), Math.abs(raw.tilt_y));
 
   const warnings: string[] = [];

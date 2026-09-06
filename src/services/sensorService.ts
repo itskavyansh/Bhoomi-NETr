@@ -56,6 +56,7 @@ const cachedLatestReadings = new Map<string, SensorReading>();
 // Realtime subscription management
 const realtimeListeners = new Set<(readings: SensorReading[]) => void>();
 let realtimeChannel: RealtimeChannel | null = null;
+let removeChannelTimeout: ReturnType<typeof setTimeout> | null = null;
 
 // =============================================================================
 // Live Supabase Production Service
@@ -133,8 +134,10 @@ export async function fetchNodeHistory(
     return chronologicallyOrdered.map((row) => ({
       timestamp: row.timestamp,
       tilt_x: row.tilt_x,
+      tilt_y: row.tilt_y,
       vibration: row.vibration,
-      displacement: Number((baseline - row.distance).toFixed(2)),
+      distance: row.distance,
+      displacement: Number(Math.abs(baseline - row.distance).toFixed(2)),
     }));
   } catch (error) {
     console.error("fetchNodeHistory failed:", error);
@@ -216,11 +219,30 @@ export async function fetchAlertHistory(limit = 1000): Promise<AlertTransition[]
 export function subscribeToReadings(
   onUpdate: (readings: SensorReading[]) => void,
 ): () => void {
-  if (isSupabaseConfigured && supabase !== null) {
-    const client = supabase;
-    realtimeListeners.add(onUpdate);
+  if (!isSupabaseConfigured || supabase === null) {
+    return () => {};
+  }
 
-    if (realtimeChannel === null) {
+  const client = supabase;
+  realtimeListeners.add(onUpdate);
+
+  if (removeChannelTimeout !== null) {
+    clearTimeout(removeChannelTimeout);
+    removeChannelTimeout = null;
+  }
+
+  if (realtimeChannel === null) {
+    const existing = client.getChannels().find(
+      (ch) => ch.topic === "realtime:sensor_readings_realtime",
+    );
+
+    if (existing && (existing.state === "joined" || existing.state === "joining")) {
+      realtimeChannel = existing;
+    } else {
+      if (existing) {
+        void client.removeChannel(existing);
+      }
+
       realtimeChannel = client
         .channel("sensor_readings_realtime")
         .on(
@@ -249,16 +271,22 @@ export function subscribeToReadings(
         )
         .subscribe();
     }
-
-    return () => {
-      realtimeListeners.delete(onUpdate);
-      if (realtimeListeners.size === 0 && realtimeChannel !== null) {
-        void client.removeChannel(realtimeChannel);
-        realtimeChannel = null;
-      }
-    };
   }
 
-  // No-op if Supabase is not configured
-  return () => {};
+  return () => {
+    realtimeListeners.delete(onUpdate);
+    if (realtimeListeners.size === 0) {
+      if (removeChannelTimeout !== null) {
+        clearTimeout(removeChannelTimeout);
+      }
+      removeChannelTimeout = setTimeout(() => {
+        removeChannelTimeout = null;
+        if (realtimeListeners.size === 0 && realtimeChannel !== null) {
+          const ch = realtimeChannel;
+          realtimeChannel = null;
+          void client.removeChannel(ch);
+        }
+      }, 1000);
+    }
+  };
 }

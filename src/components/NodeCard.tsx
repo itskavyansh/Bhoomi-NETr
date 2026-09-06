@@ -46,8 +46,9 @@ export function NodeCard({ reading }: NodeCardProps) {
         <StatusBadge status={reading.status} />
       </header>
 
-      <div className="grid grid-cols-2 gap-3 flex-1">
-        <MetricTile label="Tilt" value={reading.tilt_x} unit="°" activeFlags={tiltFlags} />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 flex-1">
+        <MetricTile label="Tilt X" value={reading.tilt_x} unit="°" activeFlags={Math.abs(reading.tilt_x) >= 15 ? tiltFlags : []} />
+        <MetricTile label="Tilt Y" value={reading.tilt_y} unit="°" activeFlags={Math.abs(reading.tilt_y) >= 15 ? tiltFlags : []} />
         <MetricTile label="Vibration" value={reading.vibration} unit="g" activeFlags={vibrationFlags} />
         <MetricTile label="Distance" value={reading.distance} unit="cm" />
         <MetricTile

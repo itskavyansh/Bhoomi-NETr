@@ -14,7 +14,9 @@ export interface SensorReading {
 export interface TimePoint {
   timestamp: string;
   tilt_x: number;
+  tilt_y: number;
   vibration: number;
+  distance: number;
   displacement: number;
 }
 

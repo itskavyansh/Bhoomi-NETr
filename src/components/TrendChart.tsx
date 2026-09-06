@@ -18,9 +18,16 @@ import {
   DISPLACEMENT_CRITICAL,
 } from "../services/analysisAdapter";
 
+export type MetricKey =
+  | "tilt_x"
+  | "tilt_y"
+  | "vibration"
+  | "distance"
+  | "displacement";
+
 interface TrendChartProps {
   data: TimePoint[];
-  dataKey: "tilt_x" | "vibration" | "displacement";
+  dataKey: MetricKey;
   label: string;
   unit: string;
   color: string;
@@ -52,7 +59,7 @@ export function TrendChart({
   let warnThreshold: number | undefined = undefined;
   let critThreshold: number | undefined = undefined;
 
-  if (dataKey === "tilt_x") {
+  if (dataKey === "tilt_x" || dataKey === "tilt_y") {
     warnThreshold = TILT_WARNING;
     critThreshold = TILT_CRITICAL;
   } else if (dataKey === "vibration") {
