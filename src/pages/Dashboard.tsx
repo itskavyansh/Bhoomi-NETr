@@ -53,16 +53,16 @@ export function Dashboard() {
   }, []);
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-      <div className="mb-8 flex flex-wrap items-center justify-center gap-3">
-        <h1 className="text-center text-2xl font-bold tracking-wide text-slate-800 sm:text-3xl">
+    <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+        <h1 className="text-3xl font-bold tracking-tight text-slate-100 md:text-4xl">
           MINE SUBSIDENCE MONITORING
         </h1>
         {!loading && !error && <LiveIndicator />}
       </div>
       <DataStatus loading={loading} error={error} />
       {!loading && !error && (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
           {readings.map((reading) => (
             <Link
               key={reading.node_id}

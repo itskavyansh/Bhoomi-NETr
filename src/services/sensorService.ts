@@ -9,7 +9,7 @@ export const LIVE_HISTORY_LIMIT = 20;
 // Default baseline distance in cm (HC-SR04 baseline when ground is undisturbed)
 const DEFAULT_BASELINE_DISTANCE = 20.0;
 
-function baselineForNode(_nodeId: string): number {
+function baselineForNode(): number {
   return DEFAULT_BASELINE_DISTANCE;
 }
 
@@ -85,7 +85,7 @@ export async function fetchLatestReadings(): Promise<SensorReading[]> {
 
     const latestRows = latestRowPerNode(parseRawRows(data));
     const analyzedReadings = latestRows.map((row) =>
-      analyzeReading(row, baselineForNode(row.node_id)),
+      analyzeReading(row, baselineForNode()),
     );
 
     // Keep cached map in sync
@@ -126,7 +126,7 @@ export async function fetchNodeHistory(
       throw error;
     }
 
-    const baseline = baselineForNode(nodeId);
+    const baseline = baselineForNode();
     // Reverse rows so time ascends left-to-right on trend charts
     const chronologicallyOrdered = parseRawRows(data).reverse();
 
@@ -138,6 +138,72 @@ export async function fetchNodeHistory(
     }));
   } catch (error) {
     console.error("fetchNodeHistory failed:", error);
+    return [];
+  }
+}
+
+export interface AlertTransition {
+  id: string;
+  node_id: string;
+  timestamp: string;
+  from_status: "NORMAL" | "WARNING" | "CRITICAL";
+  to_status: "NORMAL" | "WARNING" | "CRITICAL";
+  warnings: string[];
+}
+
+export async function fetchAlertHistory(limit = 1000): Promise<AlertTransition[]> {
+  if (!isSupabaseConfigured || supabase === null) {
+    return [];
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("sensor_readings")
+      .select("id, node_id, timestamp, tilt_x, tilt_y, vibration, distance")
+      .lte("timestamp", new Date().toISOString())
+      .order("timestamp", { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+
+    const rows = parseRawRows(data).reverse();
+    const baseline = baselineForNode();
+    
+    // Group by node
+    const nodeHistories = new Map<string, SensorReading[]>();
+    for (const row of rows) {
+      if (!nodeHistories.has(row.node_id)) {
+        nodeHistories.set(row.node_id, []);
+      }
+      nodeHistories.get(row.node_id)!.push(analyzeReading(row, baseline));
+    }
+
+    const transitions: AlertTransition[] = [];
+    
+    // Find transitions
+    for (const [nodeId, readings] of nodeHistories.entries()) {
+      let currentStatus: "NORMAL" | "WARNING" | "CRITICAL" = "NORMAL";
+      for (const reading of readings) {
+        if (reading.status !== currentStatus) {
+          transitions.push({
+            id: `${nodeId}-${reading.timestamp}`,
+            node_id: nodeId,
+            timestamp: reading.timestamp,
+            from_status: currentStatus,
+            to_status: reading.status,
+            warnings: reading.warnings,
+          });
+          currentStatus = reading.status;
+        }
+      }
+    }
+
+    // Sort all transitions descending by timestamp
+    transitions.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+    return transitions;
+  } catch (error) {
+    console.error("fetchAlertHistory failed:", error);
     return [];
   }
 }
@@ -163,7 +229,7 @@ export function subscribeToReadings(
           (payload) => {
             const raw = payload.new;
             if (isRawSensorRow(raw)) {
-              const analyzed = analyzeReading(raw, baselineForNode(raw.node_id));
+              const analyzed = analyzeReading(raw, baselineForNode());
               cachedLatestReadings.set(raw.node_id, analyzed);
               const updatedList = Array.from(cachedLatestReadings.values());
               realtimeListeners.forEach((listener) => {

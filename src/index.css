@@ -1,1 +1,68 @@
 @import "tailwindcss";
+
+@theme {
+  --color-surface-base: #020617; /* slate-950 */
+  --color-surface-panel: #1e293b; /* slate-800 */
+  --color-surface-card: #0f172a; /* slate-900 */
+  --color-surface-tile: rgba(30, 41, 59, 0.6); /* slate-800/60 equivalent */
+  
+  --color-surface-border: #334155; /* slate-700 */
+  --color-surface-border-hover: #475569; /* slate-600 */
+  
+  --color-status-normal: #10b981; /* emerald-500 */
+  --color-status-normal-bg: rgba(16, 185, 129, 0.15);
+  --color-status-normal-border: rgba(16, 185, 129, 0.3);
+
+  --color-status-watch: #f59e0b; /* amber-500 */
+  --color-status-watch-bg: rgba(245, 158, 11, 0.15);
+  --color-status-watch-border: rgba(245, 158, 11, 0.3);
+  --color-status-watch-tint: rgba(245, 158, 11, 0.05);
+
+  --color-status-critical: #ef4444; /* red-500 */
+  --color-status-critical-bg: rgba(239, 68, 68, 0.15);
+  --color-status-critical-border: rgba(239, 68, 68, 0.3);
+  --color-status-critical-tint: rgba(239, 68, 68, 0.05);
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Pulsing animation strictly for critical state */
+@keyframes critical-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+@keyframes critical-border-pulse {
+  0% { border-color: rgba(239, 68, 68, 0.3); }
+  50% { border-color: rgba(239, 68, 68, 0.6); }
+  100% { border-color: rgba(239, 68, 68, 0.3); }
+}
+
+@keyframes grid-flow {
+  0% { background-position: 0 0; }
+  100% { background-position: 40px 40px; }
+}
+
+.animate-critical-pulse {
+  animation: critical-pulse 2s infinite;
+}
+
+.animate-critical-border {
+  animation: critical-border-pulse 3s infinite ease-in-out;
+}
+
+.animate-grid-flow {
+  background-image: linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  animation: grid-flow 20s linear infinite;
+}
+
+@utility hide-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

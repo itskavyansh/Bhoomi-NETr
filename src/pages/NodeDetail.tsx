@@ -6,6 +6,7 @@ import { LiveIndicator } from "../components/LiveIndicator";
 import { MetricTile } from "../components/MetricTile";
 import { StatusBadge } from "../components/StatusBadge";
 import { TrendChart } from "../components/TrendChart";
+import { AlertHistoryPanel } from "../components/AlertHistoryPanel";
 import {
   fetchLatestReadings,
   fetchNodeHistory,
@@ -105,10 +106,10 @@ export function NodeDetail() {
   }, [nodeId]);
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+    <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
       <Link
         to="/dashboard"
-        className="inline-flex items-center gap-2 text-sm font-medium text-teal-700 hover:text-teal-800"
+        className="inline-flex items-center gap-2 text-sm font-medium text-teal-500 hover:text-teal-400"
       >
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         Back to Dashboard
@@ -122,84 +123,110 @@ export function NodeDetail() {
 
       {!loading && !error && !reading && (
         <>
-          <h1 className="mt-8 text-2xl font-bold text-slate-800">Node not found</h1>
-          <p className="mt-2 text-sm font-medium text-gray-500">
+          <h1 className="mt-8 text-2xl font-bold text-slate-100">Node not found</h1>
+          <p className="mt-2 text-sm font-medium text-slate-400">
             No sensor node matches the id {nodeId ?? "unknown"}.
           </p>
         </>
       )}
 
       {!loading && !error && reading && (
-        <>
-          <header className="mt-8 mb-6 flex flex-wrap items-center justify-between gap-4">
-            <h1 className="text-2xl font-bold tracking-wide text-slate-800 sm:text-3xl">
-              NODE {reading.node_id}
-            </h1>
-            <div className="flex items-center gap-3">
-              <LiveIndicator />
-              <StatusBadge status={reading.status} />
-            </div>
-          </header>
+        <div className="mt-8 flex flex-col gap-8 lg:flex-row">
+          {/* Left Column: Main Content */}
+          <div className="flex-1 min-w-0">
+            <header className="mb-8 flex flex-wrap items-center justify-between gap-4">
+              <h1 className="text-3xl font-bold tracking-tight text-slate-100 md:text-4xl">
+                NODE {reading.node_id}
+              </h1>
+              <div className="flex items-center gap-4">
+                <LiveIndicator />
+                <StatusBadge status={reading.status} />
+              </div>
+            </header>
 
-          <div className="grid grid-cols-2 gap-4">
-            <MetricTile label="Tilt" value={reading.tilt_x} unit="°" size="lg" />
-            <MetricTile
-              label="Vibration"
-              value={reading.vibration}
-              unit="g"
-              size="lg"
-            />
-            <MetricTile
-              label="Distance"
-              value={reading.distance}
-              unit="cm"
-              size="lg"
-            />
-            <MetricTile
-              label="Displacement"
-              value={reading.displacement}
-              unit="cm"
-              size="lg"
-            />
+            <div className="grid grid-cols-2 gap-6 lg:grid-cols-4">
+              <MetricTile 
+                label="Tilt" 
+                value={reading.tilt_x} 
+                unit="°" 
+                size="lg" 
+                activeFlags={reading.warnings.filter(w => w === "EXCESSIVE_TILT")} 
+              />
+              <MetricTile
+                label="Vibration"
+                value={reading.vibration}
+                unit="g"
+                size="lg"
+                activeFlags={reading.warnings.filter(w => w === "HIGH_VIBRATION")}
+              />
+              <MetricTile
+                label="Distance"
+                value={reading.distance}
+                unit="cm"
+                size="lg"
+              />
+              <MetricTile
+                label="Displacement"
+                value={reading.displacement}
+                unit="cm"
+                size="lg"
+                activeFlags={reading.warnings.filter(w => w === "ABNORMAL_DISPLACEMENT")}
+              />
+            </div>
+
+            {(() => {
+              const unmappedWarnings = reading.warnings.filter(w => 
+                w !== "EXCESSIVE_TILT" && 
+                w !== "HIGH_VIBRATION" && 
+                w !== "ABNORMAL_DISPLACEMENT"
+              );
+              
+              if (unmappedWarnings.length === 0) return null;
+              
+              return (
+                <ul className="mt-6 list-disc space-y-1 pl-5 text-sm font-medium text-status-critical text-left">
+                  {unmappedWarnings.map((warning) => (
+                    <li key={warning}>{warning}</li>
+                  ))}
+                </ul>
+              );
+            })()}
+
+            <section className="mt-16">
+              <h2 className="mb-6 text-xl font-bold tracking-tight text-slate-100 text-left">
+                Historical Trends
+              </h2>
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                <TrendChart
+                  data={history}
+                  dataKey="tilt_x"
+                  label="Tilt"
+                  unit="°"
+                  color="#2563eb"
+                />
+                <TrendChart
+                  data={history}
+                  dataKey="vibration"
+                  label="Vibration"
+                  unit="g"
+                  color="#d97706"
+                />
+                <TrendChart
+                  data={history}
+                  dataKey="displacement"
+                  label="Displacement"
+                  unit="cm"
+                  color="#e11d48"
+                />
+              </div>
+            </section>
           </div>
 
-          {reading.warnings.length > 0 && (
-            <ul className="mt-6 list-disc space-y-1 pl-5 text-sm text-red-600">
-              {reading.warnings.map((warning) => (
-                <li key={warning}>{warning}</li>
-              ))}
-            </ul>
-          )}
-
-          <section className="mt-10">
-            <h2 className="mb-4 text-lg font-semibold text-slate-800">
-              Historical Trends
-            </h2>
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-              <TrendChart
-                data={history}
-                dataKey="tilt_x"
-                label="Tilt"
-                unit="°"
-                color="#2563eb"
-              />
-              <TrendChart
-                data={history}
-                dataKey="vibration"
-                label="Vibration"
-                unit="g"
-                color="#d97706"
-              />
-              <TrendChart
-                data={history}
-                dataKey="displacement"
-                label="Displacement"
-                unit="cm"
-                color="#e11d48"
-              />
-            </div>
-          </section>
-        </>
+          {/* Right Column: Alert History */}
+          <div className="lg:w-[30%] lg:flex-none lg:ml-auto h-[800px] lg:h-[calc(100vh-8rem)] lg:sticky lg:top-8 text-left">
+            <AlertHistoryPanel nodeId={nodeId} showFilters={false} />
+          </div>
+        </div>
       )}
     </main>
   );

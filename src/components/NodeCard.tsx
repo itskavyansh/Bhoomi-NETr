@@ -21,29 +21,46 @@ function sortWarnings(warnings: string[]): string[] {
 }
 
 export function NodeCard({ reading }: NodeCardProps) {
+  // Determine background and border colors based on status
+  const cardStyleClass = 
+    reading.status === "CRITICAL" ? "bg-status-critical-tint border-status-critical shadow-status-critical-bg animate-critical-border" : 
+    reading.status === "WARNING" ? "bg-status-watch-tint border-status-watch" : 
+    "bg-surface-card border-surface-border";
+
+  const tiltFlags = reading.warnings.filter(w => w === "EXCESSIVE_TILT");
+  const vibrationFlags = reading.warnings.filter(w => w === "HIGH_VIBRATION");
+  const displacementFlags = reading.warnings.filter(w => w === "ABNORMAL_DISPLACEMENT");
+  
+  const unmappedWarnings = reading.warnings.filter(w => 
+    w !== "EXCESSIVE_TILT" && 
+    w !== "HIGH_VIBRATION" && 
+    w !== "ABNORMAL_DISPLACEMENT"
+  );
+
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition duration-200 group-hover:scale-[1.01] group-hover:shadow-lg">
+    <article className={`rounded-xl border p-6 shadow-lg shadow-black/40 transition-all duration-300 hover:scale-[1.02] hover:brightness-110 flex flex-col h-full ${cardStyleClass}`}>
       <header className="mb-5 flex items-center justify-between gap-4">
-        <h2 className="text-lg font-semibold tracking-wide text-slate-800">
+        <h2 className="text-lg font-bold tracking-wider text-slate-100">
           NODE {reading.node_id}
         </h2>
         <StatusBadge status={reading.status} />
       </header>
 
-      <div className="grid grid-cols-2 gap-3">
-        <MetricTile label="Tilt" value={reading.tilt_x} unit="°" />
-        <MetricTile label="Vibration" value={reading.vibration} unit="g" />
+      <div className="grid grid-cols-2 gap-3 flex-1">
+        <MetricTile label="Tilt" value={reading.tilt_x} unit="°" activeFlags={tiltFlags} />
+        <MetricTile label="Vibration" value={reading.vibration} unit="g" activeFlags={vibrationFlags} />
         <MetricTile label="Distance" value={reading.distance} unit="cm" />
         <MetricTile
           label="Displacement"
           value={reading.displacement}
           unit="cm"
+          activeFlags={displacementFlags}
         />
       </div>
 
-      {reading.warnings.length > 0 && (
-        <ul className="mt-5 list-disc space-y-1 pl-5 text-sm text-red-600">
-          {sortWarnings(reading.warnings).map((warning) => (
+      {unmappedWarnings.length > 0 && (
+        <ul className="mt-5 list-disc space-y-1 pl-5 text-sm font-medium text-status-critical">
+          {sortWarnings(unmappedWarnings).map((warning) => (
             <li key={warning}>{warning}</li>
           ))}
         </ul>

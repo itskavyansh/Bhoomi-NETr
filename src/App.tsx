@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Navbar } from "./components/Navbar";
+import { NotificationPanel } from "./components/NotificationPanel";
 import { Dashboard } from "./pages/Dashboard";
 import { Home } from "./pages/Home";
 import { NodeDetail } from "./pages/NodeDetail";
@@ -7,13 +8,14 @@ import { NodeDetail } from "./pages/NodeDetail";
 export function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+      <div className="min-h-screen bg-surface-base text-slate-300 selection:bg-teal-500/30">
         <Navbar />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/node/:nodeId" element={<NodeDetail />} />
         </Routes>
+        <NotificationPanel />
       </div>
     </BrowserRouter>
   );

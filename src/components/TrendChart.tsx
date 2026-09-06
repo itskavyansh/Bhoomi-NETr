@@ -1,12 +1,22 @@
 import {
-  Line,
-  LineChart,
+  Area,
+  AreaChart,
+  CartesianGrid,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
+  ReferenceLine,
 } from "recharts";
 import type { TimePoint } from "../types/sensor";
+import {
+  TILT_WARNING,
+  TILT_CRITICAL,
+  VIBRATION_WARNING,
+  VIBRATION_CRITICAL,
+  DISPLACEMENT_WARNING,
+  DISPLACEMENT_CRITICAL,
+} from "../services/analysisAdapter";
 
 interface TrendChartProps {
   data: TimePoint[];
@@ -39,40 +49,96 @@ export function TrendChart({
   unit,
   color,
 }: TrendChartProps) {
+  let warnThreshold: number | undefined = undefined;
+  let critThreshold: number | undefined = undefined;
+
+  if (dataKey === "tilt_x") {
+    warnThreshold = TILT_WARNING;
+    critThreshold = TILT_CRITICAL;
+  } else if (dataKey === "vibration") {
+    warnThreshold = VIBRATION_WARNING;
+    critThreshold = VIBRATION_CRITICAL;
+  } else if (dataKey === "displacement") {
+    warnThreshold = DISPLACEMENT_WARNING;
+    critThreshold = DISPLACEMENT_CRITICAL;
+  }
+
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h3 className="mb-4 text-sm font-bold text-slate-800">{label}</h3>
+    <div className="rounded-xl border border-surface-border bg-surface-card p-6 shadow-lg shadow-black/40">
+      <h3 className="mb-4 text-xs font-bold uppercase tracking-wider text-slate-500">{label}</h3>
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 8, right: 12, left: 4, bottom: 0 }}>
+          <AreaChart data={data} margin={{ top: 10, right: 12, left: 4, bottom: 0 }}>
+            <defs>
+              <linearGradient id={`gradient-${dataKey}`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={color} stopOpacity={0.3} />
+                <stop offset="95%" stopColor={color} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
             <XAxis
               dataKey="timestamp"
               tickFormatter={formatClock}
-              tick={{ fontSize: 11, fill: "#64748b" }}
+              tick={{ fontSize: 11, fill: "#94a3b8", fontFamily: '"JetBrains Mono", monospace' }}
+              tickLine={{ stroke: "#475569" }}
+              axisLine={{ stroke: "#475569" }}
               minTickGap={24}
             />
             <YAxis
-              tick={{ fontSize: 11, fill: "#64748b" }}
+              domain={['auto', 'auto']}
+              tick={{ fontSize: 11, fill: "#94a3b8", fontFamily: '"JetBrains Mono", monospace' }}
+              tickLine={{ stroke: "#475569" }}
+              axisLine={{ stroke: "#475569" }}
               label={{
                 value: unit,
                 angle: -90,
                 position: "insideLeft",
-                style: { fill: "#64748b", fontSize: 12, textAnchor: "middle" },
+                style: { fill: "#94a3b8", fontSize: 12, textAnchor: "middle" },
               }}
             />
+            {warnThreshold !== undefined && (
+              <ReferenceLine 
+                y={warnThreshold} 
+                stroke="#f59e0b" 
+                strokeDasharray="3 3" 
+                strokeOpacity={0.5}
+                label={{ position: 'insideTopLeft', value: `Warn (${warnThreshold})`, fill: '#f59e0b', fontSize: 10, fontFamily: '"JetBrains Mono", monospace' }}
+              />
+            )}
+            {critThreshold !== undefined && (
+              <ReferenceLine 
+                y={critThreshold} 
+                stroke="#ef4444" 
+                strokeDasharray="3 3" 
+                strokeOpacity={0.5}
+                label={{ position: 'insideTopLeft', value: `Crit (${critThreshold})`, fill: '#ef4444', fontSize: 10, fontFamily: '"JetBrains Mono", monospace' }}
+              />
+            )}
             <Tooltip
+              contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", color: "#f8fafc", borderRadius: "0.5rem" }}
+              itemStyle={{ color: "#f8fafc", fontFamily: '"JetBrains Mono", monospace', fontWeight: "bold" }}
+              labelStyle={{ color: "#94a3b8", marginBottom: "4px" }}
               labelFormatter={(value) => formatClock(String(value))}
               formatter={(value) => [formatTooltipValue(value, unit), label]}
             />
-            <Line
+            <Area
               type="monotone"
               dataKey={dataKey}
               stroke={color}
               strokeWidth={2}
-              dot={false}
+              fillOpacity={1}
+              fill={`url(#gradient-${dataKey})`}
+              dot={(props: { cx?: number; cy?: number; index?: number }) => {
+                const { cx, cy, index } = props;
+                if (index === data.length - 1) {
+                  return <circle key="latest" cx={cx} cy={cy} r={4} fill={color} stroke="none" />;
+                }
+                return <span key={index} />;
+              }}
+              activeDot={{ r: 6, fill: color, stroke: "#0f172a", strokeWidth: 2 }}
               isAnimationActive={false}
             />
-          </LineChart>
+          </AreaChart>
         </ResponsiveContainer>
       </div>
     </div>

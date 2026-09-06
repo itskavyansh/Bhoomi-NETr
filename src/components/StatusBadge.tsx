@@ -9,16 +9,16 @@ const statusStyles: Record<
   { pill: string; dot: string }
 > = {
   NORMAL: {
-    pill: "bg-green-100 text-green-800 border-green-200",
-    dot: "🟢",
+    pill: "bg-status-normal-bg text-status-normal border-status-normal-border",
+    dot: "bg-status-normal",
   },
   WARNING: {
-    pill: "bg-yellow-100 text-yellow-800 border-yellow-200",
-    dot: "🟡",
+    pill: "bg-status-watch-bg text-status-watch border-status-watch-border",
+    dot: "bg-status-watch",
   },
   CRITICAL: {
-    pill: "bg-red-100 text-red-800 border-red-200",
-    dot: "🔴",
+    pill: "bg-status-critical-bg text-status-critical border-status-critical-border animate-critical-pulse",
+    dot: "bg-status-critical animate-pulse",
   },
 };
 
@@ -27,9 +27,9 @@ export function StatusBadge({ status }: StatusBadgeProps) {
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold tracking-wide ${styles.pill}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold tracking-wider ${styles.pill}`}
     >
-      <span aria-hidden="true">{styles.dot}</span>
+      <span aria-hidden="true" className={`h-2 w-2 rounded-full ${styles.dot}`} />
       {status}
     </span>
   );

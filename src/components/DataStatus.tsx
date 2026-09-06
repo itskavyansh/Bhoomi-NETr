@@ -1,4 +1,4 @@
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 
 interface DataStatusProps {
   loading: boolean;
@@ -13,8 +13,8 @@ export function DataStatus({
 }: DataStatusProps) {
   if (loading) {
     return (
-      <div className="flex items-center justify-center gap-2 py-16 text-sm font-medium text-gray-500">
-        <Loader2 className="h-5 w-5 animate-spin text-teal-600" aria-hidden="true" />
+      <div className="flex flex-col items-center justify-center gap-3 py-20 text-sm font-medium text-slate-400">
+        <Loader2 className="h-6 w-6 animate-spin text-teal-500" aria-hidden="true" />
         {loadingLabel}
       </div>
     );
@@ -22,9 +22,10 @@ export function DataStatus({
 
   if (error) {
     return (
-      <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-center text-sm font-medium text-red-700">
-        {error}
-      </p>
+      <div className="mx-auto flex max-w-lg items-center gap-3 rounded-lg border border-status-critical-border bg-status-critical-bg p-4 text-sm font-medium text-red-200">
+        <AlertCircle className="h-5 w-5 shrink-0 text-status-critical" aria-hidden="true" />
+        <p>{error}</p>
+      </div>
     );
   }
 
