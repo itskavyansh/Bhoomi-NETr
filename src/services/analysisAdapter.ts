@@ -53,8 +53,8 @@ export function evaluateSensorHealth(
   let penalty = 0;
 
   // Hardware diagnostic status from firmware
-  const mpuFault = raw.mpu6050_status === "fault" || raw.sensor_status === "fault";
-  const hcsr04Fault = raw.hc_sr04_status === "fault" || raw.sensor_status === "fault";
+  const mpuFault = raw.mpu6050_status === "fault";
+  const hcsr04Fault = raw.hc_sr04_status === "fault";
 
   if (mpuFault) {
     penalty += 50;
@@ -187,7 +187,6 @@ export function evaluateSensorHealth(
       data_quality: dataQualityStatus,
       mpu6050_status: mpuFault ? "fault" : (raw.mpu6050_status ?? null),
       hc_sr04_status: hcsr04Fault ? "fault" : (raw.hc_sr04_status ?? null),
-      sensor_status: mpuFault || hcsr04Fault ? "fault" : (raw.sensor_status ?? null),
       issues,
     },
     confidence_warning: confidenceWarning,
@@ -207,7 +206,7 @@ export function analyzeReading(
   history?: (TimePoint | RawSensorRow)[],
 ): SensorReading {
   const safeDistance = isValidNumber(raw.distance) ? raw.distance : baselineDistance;
-  const displacement = Number(
+  const displacement = raw.displacement != null ? raw.displacement : Number(
     Math.abs(baselineDistance - safeDistance).toFixed(2),
   );
   const safeTiltX = isValidNumber(raw.tilt_x) ? raw.tilt_x : 0;
@@ -321,7 +320,6 @@ export function analyzeReading(
     sensor_health: healthEvaluation.sensor_health,
     mpu6050_status: raw.mpu6050_status,
     hc_sr04_status: raw.hc_sr04_status,
-    sensor_status: raw.sensor_status,
     confidence_warning: healthEvaluation.confidence_warning,
   };
 }

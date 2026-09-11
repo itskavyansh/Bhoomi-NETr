@@ -13,6 +13,8 @@
         "verify": "node verify_db.js",
         "test": "node test_function.js",
         "test:trends": "node --test --experimental-strip-types tests/trend_analysis.test.ts",
+        "test:sms": "node --experimental-strip-types tests/test_sms.js",
+        "test:real-sms": "node --experimental-strip-types test_real_sms.js",
         "dev": "vite",
         "build": "tsc -b && vite build",
         "lint": "eslint .",

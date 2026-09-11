@@ -152,6 +152,33 @@ pytest tests/
 
 ---
 
+## Automated SMS Alert System (Fast2SMS)
+
+Bhoomi-NETr features a production-grade automated SMS dispatch pipeline powered by the **Fast2SMS Dev API** (Quick SMS route `q`). Whenever any monitored node transitions to **CRITICAL** risk, an emergency SMS is automatically dispatched to the configured responder.
+
+### Key Capabilities
+- **Direct Backend API Integration**: Autonomous `POST https://www.fast2sms.com/dev/bulkV2` calls without manual intervention or browser clicks.
+- **Anti-Spam & Deduplication**: Alerts only trigger on state escalation into `CRITICAL`. Continuous readings in `CRITICAL` state are deduplicated and gated by a configurable cooldown window (`ALERT_COOLDOWN_MINUTES`).
+- **Resilient Pipeline**: SMS service execution is completely non-blocking; external API or network failures are safely logged and never interrupt telemetry ingestion or dashboard streaming.
+- **Strict Key Security**: Fast2SMS API keys remain purely server-side.
+
+### Configuration (`.env`)
+```env
+FAST2SMS_API_KEY=<your-fast2sms-dev-api-key>
+ALERT_PHONE_NUMBER=<your-10-digit-mobile-number>
+ALERT_COOLDOWN_MINUTES=15
+SMS_ALERTS_ENABLED=true
+```
+
+### Running the SMS Test Suite
+Execute all 11 integration and anti-spam verification tests:
+```bash
+npm run test:sms
+```
+
+---
+
+
 ## Current Known Limitations
 
 * **Demonstration-Only Thresholds**: Current warning limits (`tilt >= 15°`, `vibration >= 1.0g`, `displacement >= 2.0cm`) are demonstration values designed to prove pipeline flow and must not be treated as certified mine-safety limits.

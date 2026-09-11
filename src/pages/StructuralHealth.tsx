@@ -44,8 +44,7 @@ function renderHealthBadge(status: string) {
 function getConfidenceSummary(reading: SensorReading): string {
   const isFault =
     reading.sensor_health?.mpu6050_status === "fault" ||
-    reading.sensor_health?.hc_sr04_status === "fault" ||
-    reading.sensor_health?.sensor_status === "fault";
+    reading.sensor_health?.hc_sr04_status === "fault";
 
   if (isFault) {
     return "Firmware telemetry explicitly reported a hardware transducer fault. Confidence is degraded regardless of plausibility checks.";
@@ -196,8 +195,7 @@ export function StructuralHealth() {
                           NODE {reading.node_id}
                         </h2>
                         {(reading.sensor_health.mpu6050_status === "fault" ||
-                          reading.sensor_health.hc_sr04_status === "fault" ||
-                          reading.sensor_health.sensor_status === "fault") && (
+                          reading.sensor_health.hc_sr04_status === "fault") && (
                           <span className="inline-flex items-center gap-1 rounded bg-rose-500/20 px-2 py-0.5 text-[11px] font-bold text-rose-300 border border-rose-500/40">
                             <AlertTriangle className="h-3 w-3 text-rose-400" />
                             HARDWARE FAULT REPORTED
@@ -292,13 +290,11 @@ export function StructuralHealth() {
                           {renderHealthBadge(reading.sensor_health.data_quality)}
                         </div>
                         {(reading.sensor_health.mpu6050_status ||
-                          reading.sensor_health.hc_sr04_status ||
-                          reading.sensor_health.sensor_status) && (
+                          reading.sensor_health.hc_sr04_status) && (
                           <div className="flex items-center justify-between rounded-lg bg-slate-800/40 px-3 py-2 border border-slate-700/40 text-xs">
                             <span className="text-slate-300 font-medium">Firmware Telemetry Diagnostic</span>
                             {reading.sensor_health.mpu6050_status === "fault" ||
-                            reading.sensor_health.hc_sr04_status === "fault" ||
-                            reading.sensor_health.sensor_status === "fault" ? (
+                            reading.sensor_health.hc_sr04_status === "fault" ? (
                               <span className="inline-flex items-center gap-1 rounded bg-rose-500/20 px-2 py-0.5 text-xs font-semibold text-rose-300 border border-rose-500/40">
                                 <XCircle className="h-3.5 w-3.5" />
                                 FAULT REPORTED
@@ -316,8 +312,7 @@ export function StructuralHealth() {
 
                     {/* Issues alert or Hardware Fault alert */}
                     {reading.sensor_health.mpu6050_status === "fault" ||
-                    reading.sensor_health.hc_sr04_status === "fault" ||
-                    reading.sensor_health.sensor_status === "fault" ? (
+                    reading.sensor_health.hc_sr04_status === "fault" ? (
                       <div className="mt-4 rounded-lg bg-rose-500/15 p-2.5 border border-rose-500/30">
                         <p className="text-[11px] text-rose-300 flex items-center gap-1.5 font-medium">
                           <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 text-rose-400" />

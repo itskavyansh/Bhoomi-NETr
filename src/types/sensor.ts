@@ -9,7 +9,6 @@ export interface SensorHealthState {
   data_quality: "GOOD" | "DEGRADED" | "INVALID";
   mpu6050_status?: "ok" | "fault" | null;
   hc_sr04_status?: "ok" | "fault" | null;
-  sensor_status?: "ok" | "fault" | null;
   issues?: string[];
 }
 
@@ -32,7 +31,6 @@ export interface SensorReading {
   sensor_health: SensorHealthState;
   mpu6050_status?: "ok" | "fault" | null;
   hc_sr04_status?: "ok" | "fault" | null;
-  sensor_status?: "ok" | "fault" | null;
   confidence_warning?: string | null;
 }
 
@@ -55,7 +53,7 @@ export type RawSensorRow = {
   tilt_y: number;
   vibration: number;
   distance: number;
+  displacement?: number | null;
   mpu6050_status?: "ok" | "fault" | null;
   hc_sr04_status?: "ok" | "fault" | null;
-  sensor_status?: "ok" | "fault" | null;
 };

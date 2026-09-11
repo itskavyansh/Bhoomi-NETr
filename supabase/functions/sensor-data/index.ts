@@ -8,6 +8,8 @@
 // =============================================================================
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { evaluateRisk } from "./risk.ts";
+import { processRiskAlert } from "./sms.ts";
 
 // ---------------------------------------------------------------------------
 // Environment variables (set via: supabase secrets set KEY=value)
@@ -32,6 +34,7 @@ interface SensorPayload {
     tilt_y: number;
     vibration: number;
     distance: number;
+    displacement?: number;
     mpu6050_status: string;
     hc_sr04_status: string;
 }
@@ -67,6 +70,13 @@ function validate(body: Record<string, unknown>): ValidationError[] {
         }
     }
     // NOTE: if timestamp is missing, we default to server now() — do not reject.
+
+    // displacement: optional numeric
+    if (body.displacement !== undefined && body.displacement !== null) {
+        if (typeof body.displacement !== "number" || isNaN(body.displacement)) {
+            errors.push({ field: "displacement", reason: "must be a valid number if provided" });
+        }
+    }
 
     // Numeric sensor fields: required, must be actual numbers (not strings, not null)
     for (const field of ["tilt_x", "tilt_y", "vibration", "distance"] as const) {
@@ -164,18 +174,15 @@ Deno.serve(async (req: Request) => {
     // Build the DB row — use server now() if timestamp was not provided
     const payload = body as SensorPayload;
     const row = {
-    node_id: payload.node_id.trim(),
-    timestamp: payload.timestamp
-        ? new Date(payload.timestamp).toISOString()
-        : new Date().toISOString(),
-
-    tilt_x: payload.tilt_x,
-    tilt_y: payload.tilt_y,
-    vibration: payload.vibration,
-    distance: payload.distance,
-
-    mpu6050_status: payload.mpu6050_status,
-    hc_sr04_status: payload.hc_sr04_status,
+        node_id: payload.node_id.trim(),
+        timestamp: payload.timestamp ? new Date(payload.timestamp).toISOString() : new Date().toISOString(),
+        tilt_x: payload.tilt_x,
+        tilt_y: payload.tilt_y,
+        vibration: payload.vibration,
+        distance: payload.distance,
+        displacement: payload.displacement,
+        mpu6050_status: payload.mpu6050_status,
+        hc_sr04_status: payload.hc_sr04_status,
     };
 
     // Supabase client — service role bypasses RLS (safe because Edge Functions are server-side)
@@ -201,6 +208,16 @@ Deno.serve(async (req: Request) => {
         );
     }
 
+    // Trigger authoritative risk assessment & automated SMS alert dispatch
+    try {
+        const risk = evaluateRisk(payload);
+        await processRiskAlert(supabase, risk);
+    } catch (alertErr) {
+        // Guarantee that SMS alerting issues NEVER crash or block the ingestion pipeline
+        console.error("Non-fatal SMS alert processing exception:", alertErr);
+    }
+
     // 201 Created — return the inserted row so the caller can confirm the id/created_at
     return jsonResponse(data, 201);
 });
+
