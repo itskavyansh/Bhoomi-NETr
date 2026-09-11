@@ -213,6 +213,8 @@ function nextReading(state) {
         tilt_y: round(tilt_y, 2),
         vibration: round(vibration, 3),
         distance: round(distance, 2),
+        mpu6050_status: "ok",
+        hc_sr04_status: "ok",
     };
 }
 
