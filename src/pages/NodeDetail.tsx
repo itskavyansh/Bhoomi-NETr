@@ -167,13 +167,23 @@ export function NodeDetail() {
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
-      <Link
-        to="/dashboard"
-        className="inline-flex items-center gap-2 text-sm font-medium text-teal-500 hover:text-teal-400"
-      >
-        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        Back to Dashboard
-      </Link>
+      <div className="flex items-center justify-between">
+        <Link
+          to="/dashboard"
+          className="inline-flex items-center gap-2 text-sm font-medium text-teal-500 hover:text-teal-400"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          Back to Dashboard
+        </Link>
+        {reading && (
+          <Link
+            to={`/trend-analysis?node=${reading.node_id}`}
+            className="inline-flex items-center gap-2 rounded-lg border border-teal-800/80 bg-teal-950/50 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-teal-400 transition hover:bg-teal-900/50 hover:text-teal-300"
+          >
+            Trend Analysis & Prediction →
+          </Link>
+        )}
+      </div>
 
       <DataStatus
         loading={loading}

@@ -5,9 +5,16 @@ interface AnimatedNumberProps {
   className?: string;
   severity?: "NORMAL" | "WARNING" | "CRITICAL";
   isInteger?: boolean;
+  decimals?: number;
 }
 
-export function AnimatedNumber({ value, className = "", severity = "NORMAL", isInteger = false }: AnimatedNumberProps) {
+export function AnimatedNumber({
+  value,
+  className = "",
+  severity = "NORMAL",
+  isInteger = false,
+  decimals = 2,
+}: AnimatedNumberProps) {
   const [displayValue, setDisplayValue] = useState(value);
   const [isFlashing, setIsFlashing] = useState(false);
   const prevValueRef = useRef(value);
@@ -83,7 +90,7 @@ export function AnimatedNumber({ value, className = "", severity = "NORMAL", isI
     <span 
       className={`inline-block transition-all duration-300 ${baseColorClass} ${isFlashing ? flashClass : ""} ${className}`}
     >
-      {isInteger ? Math.round(displayValue) : displayValue.toFixed(2)}
+      {isInteger ? Math.round(displayValue) : displayValue.toFixed(decimals)}
     </span>
   );
 }

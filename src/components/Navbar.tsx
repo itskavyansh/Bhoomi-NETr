@@ -1,4 +1,4 @@
-import { Activity, Menu, ShieldCheck, TrendingUp, X } from "lucide-react";
+import { Activity, LineChart, Menu, ShieldCheck, TrendingUp, X } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -21,6 +21,11 @@ export function Navbar() {
       to: "/risk-score",
       label: "Risk Score",
       icon: TrendingUp,
+    },
+    {
+      to: "/trend-analysis",
+      label: "Trend Analysis",
+      icon: LineChart,
     },
   ];
 
@@ -112,3 +117,4 @@ export function Navbar() {
     </nav>
   );
 }
+

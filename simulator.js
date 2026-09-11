@@ -66,7 +66,7 @@ if (!ENDPOINT || !ANON_KEY) {
 const SCENARIO = getFlag("scenario") ?? "normal";
 const TARGET_NODE = getFlag("node") ?? null;
 
-const VALID_SCENARIOS = ["normal", "excessive_tilt", "high_vibration", "critical"];
+const VALID_SCENARIOS = ["normal", "excessive_tilt", "high_vibration", "critical", "progressive_failure"];
 if (!VALID_SCENARIOS.includes(SCENARIO)) {
     console.error(`[FATAL] Unknown scenario "${SCENARIO}". Valid: ${VALID_SCENARIOS.join(", ")}`);
     process.exit(1);
@@ -111,6 +111,15 @@ const SCENARIO_TARGETS = {
         tilt_y: { target: 14.0, rampSteps: 10 },
         vibration: { target: 1.85, rampSteps: 10 },  // well above 1.5 g threshold
         distance: { target: 12.0, rampSteps: 12 },  // sharp drop from 20→12 cm
+    },
+
+    // Progressive Subsidence Failure: smooth gradual ramp demonstrating early predictive detection
+    // before the final critical threshold is reached
+    progressive_failure: {
+        tilt_x: { target: 16.5, rampSteps: 25 },    // gradually ramps past 15° warning toward critical
+        tilt_y: { target: 8.0, rampSteps: 25 },
+        vibration: { target: 1.15, rampSteps: 25 },  // gradually ramps past 1.0 g warning
+        distance: { target: 17.2, rampSteps: 25 },   // drops from 20cm -> 17.2cm (displacement = 2.8cm)
     },
 };
 

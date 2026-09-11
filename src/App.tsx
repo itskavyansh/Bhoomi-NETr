@@ -6,6 +6,7 @@ import { Home } from "./pages/Home";
 import { NodeDetail } from "./pages/NodeDetail";
 import { RiskScore } from "./pages/RiskScore";
 import { StructuralHealth } from "./pages/StructuralHealth";
+import { TrendAnalysis } from "./pages/TrendAnalysis";
 
 export function App() {
   return (
@@ -18,6 +19,7 @@ export function App() {
           <Route path="/structural-health" element={<StructuralHealth />} />
           <Route path="/risk-score" element={<RiskScore />} />
           <Route path="/node/:nodeId" element={<NodeDetail />} />
+          <Route path="/trend-analysis" element={<TrendAnalysis />} />
         </Routes>
         <NotificationPanel />
       </div>
