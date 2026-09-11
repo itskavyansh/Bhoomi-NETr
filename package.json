@@ -11,6 +11,8 @@
         "simulate:critical": "node simulator.js --scenario=critical",
         "verify": "node verify_db.js",
         "test": "node test_function.js",
+        "test:sms": "node tests/test_sms.js",
+        "test:real-sms": "node test_real_sms.js",
         "dev": "vite",
         "build": "tsc -b && vite build",
         "lint": "eslint .",

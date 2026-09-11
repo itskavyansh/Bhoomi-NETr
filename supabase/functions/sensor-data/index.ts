@@ -8,6 +8,8 @@
 // =============================================================================
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { evaluateRisk } from "./risk.ts";
+import { processRiskAlert } from "./sms.ts";
 
 // ---------------------------------------------------------------------------
 // Environment variables (set via: supabase secrets set KEY=value)
@@ -178,6 +180,16 @@ Deno.serve(async (req: Request) => {
         );
     }
 
+    // Trigger authoritative risk assessment & automated SMS alert dispatch
+    try {
+        const risk = evaluateRisk(payload);
+        await processRiskAlert(supabase, risk);
+    } catch (alertErr) {
+        // Guarantee that SMS alerting issues NEVER crash or block the ingestion pipeline
+        console.error("Non-fatal SMS alert processing exception:", alertErr);
+    }
+
     // 201 Created — return the inserted row so the caller can confirm the id/created_at
     return jsonResponse(data, 201);
 });
+
