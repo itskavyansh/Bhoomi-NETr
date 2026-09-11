@@ -101,27 +101,55 @@ export async function fetchLatestReadings(): Promise<SensorReading[]> {
   }
 }
 
+export type TimeRange = "recent" | "1h" | "6h" | "24h" | "7d";
+
 /**
  * Fetch historical time points for a specific node_id.
  * Queries recent rows descending by timestamp, then reverses them so charts
  * render in chronological order (oldest to newest).
+ * Supports numeric limit or named TimeRange ("recent", "1h", "6h", "24h", "7d").
  */
 export async function fetchNodeHistory(
   nodeId: string,
-  limit = 20,
+  limitOrRange: number | TimeRange = 20,
 ): Promise<TimePoint[]> {
   if (!isSupabaseConfigured || supabase === null) {
     return [];
   }
 
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from("sensor_readings")
       .select("id, node_id, timestamp, tilt_x, tilt_y, vibration, distance")
       .eq("node_id", nodeId)
       .lte("timestamp", new Date().toISOString())
-      .order("timestamp", { ascending: false })
-      .limit(limit);
+      .order("timestamp", { ascending: false });
+
+    if (typeof limitOrRange === "number") {
+      query = query.limit(limitOrRange);
+    } else {
+      const now = Date.now();
+      switch (limitOrRange) {
+        case "1h":
+          query = query.gte("timestamp", new Date(now - 3600 * 1000).toISOString()).limit(300);
+          break;
+        case "6h":
+          query = query.gte("timestamp", new Date(now - 6 * 3600 * 1000).toISOString()).limit(600);
+          break;
+        case "24h":
+          query = query.gte("timestamp", new Date(now - 24 * 3600 * 1000).toISOString()).limit(1200);
+          break;
+        case "7d":
+          query = query.gte("timestamp", new Date(now - 7 * 86400 * 1000).toISOString()).limit(2500);
+          break;
+        case "recent":
+        default:
+          query = query.limit(30);
+          break;
+      }
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       throw error;
@@ -131,14 +159,18 @@ export async function fetchNodeHistory(
     // Reverse rows so time ascends left-to-right on trend charts
     const chronologicallyOrdered = parseRawRows(data).reverse();
 
-    return chronologicallyOrdered.map((row) => ({
-      timestamp: row.timestamp,
-      tilt_x: row.tilt_x,
-      tilt_y: row.tilt_y,
-      vibration: row.vibration,
-      distance: row.distance,
-      displacement: Number(Math.abs(baseline - row.distance).toFixed(2)),
-    }));
+    return chronologicallyOrdered.map((row) => {
+      const analyzed = analyzeReading(row, baseline);
+      return {
+        timestamp: row.timestamp,
+        tilt_x: row.tilt_x,
+        tilt_y: row.tilt_y,
+        vibration: row.vibration,
+        distance: row.distance,
+        displacement: analyzed.displacement,
+        risk_score: analyzed.risk_score,
+      };
+    });
   } catch (error) {
     console.error("fetchNodeHistory failed:", error);
     return [];

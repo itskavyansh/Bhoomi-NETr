@@ -18,6 +18,7 @@ export interface TimePoint {
   vibration: number;
   distance: number;
   displacement: number;
+  risk_score?: number;
 }
 
 // Keep in sync with Person 1's schema (`sensor_readings` table columns).

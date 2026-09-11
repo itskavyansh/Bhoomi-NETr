@@ -9,7 +9,7 @@
 // directly with the frontend dashboard until the live backend analysis table/queue is wired.
 // Contract: { node_id, status, risk_score, warnings, displacement }
 
-import type { RawSensorRow, SensorReading } from "../types/sensor";
+import type { RawSensorRow, SensorReading } from "../types/sensor.ts";
 
 // Demonstration thresholds matching engine/thresholds.py
 export const TILT_THRESHOLD_DEG = 15.0;

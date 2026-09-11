@@ -1,7 +1,9 @@
-import { Activity, Menu } from "lucide-react";
+import { useState } from "react";
+import { Activity, Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export function Navbar() {
+  const [mobileOpen, setMobileOpen] = useState(false);
   return (
     <nav className="sticky top-0 z-50 border-b border-surface-border bg-surface-panel/95 backdrop-blur-md shadow-md">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -24,17 +26,48 @@ export function Navbar() {
             >
               Live Dashboard
             </Link>
+            <Link
+              to="/trend-analysis"
+              className="rounded-lg px-4 py-2 text-sm font-medium text-slate-300 transition-all hover:bg-white/5 hover:text-white"
+            >
+              Trend Analysis
+            </Link>
           </div>
           <div className="sm:hidden">
             <button
               type="button"
+              onClick={() => setMobileOpen(!mobileOpen)}
               className="inline-flex items-center justify-center rounded-md p-2 text-slate-400 transition-colors hover:bg-white/5 hover:text-white focus:outline-hidden"
             >
-              <Menu className="h-6 w-6" aria-hidden="true" />
+              {mobileOpen ? (
+                <X className="h-6 w-6" aria-hidden="true" />
+              ) : (
+                <Menu className="h-6 w-6" aria-hidden="true" />
+              )}
             </button>
           </div>
         </div>
       </div>
+      {mobileOpen && (
+        <div className="border-t border-surface-border bg-surface-panel px-4 py-3 sm:hidden">
+          <div className="flex flex-col gap-2">
+            <Link
+              to="/dashboard"
+              onClick={() => setMobileOpen(false)}
+              className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white"
+            >
+              Live Dashboard
+            </Link>
+            <Link
+              to="/trend-analysis"
+              onClick={() => setMobileOpen(false)}
+              className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white"
+            >
+              Trend Analysis
+            </Link>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

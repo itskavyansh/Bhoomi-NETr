@@ -23,7 +23,8 @@ export type MetricKey =
   | "tilt_y"
   | "vibration"
   | "distance"
-  | "displacement";
+  | "displacement"
+  | "risk_score";
 
 interface TrendChartProps {
   data: TimePoint[];
@@ -44,9 +45,9 @@ function formatClock(iso: string): string {
 function formatTooltipValue(value: unknown, unit: string): string {
   const numeric = typeof value === "number" ? value : Number(value);
   if (Number.isNaN(numeric)) {
-    return `— ${unit}`;
+    return `— ${unit}`.trim();
   }
-  return `${numeric} ${unit}`;
+  return unit ? `${numeric} ${unit}` : `${numeric}`;
 }
 
 export function TrendChart({
@@ -68,6 +69,9 @@ export function TrendChart({
   } else if (dataKey === "displacement") {
     warnThreshold = DISPLACEMENT_WARNING;
     critThreshold = DISPLACEMENT_CRITICAL;
+  } else if (dataKey === "risk_score") {
+    warnThreshold = 40;
+    critThreshold = 80;
   }
 
   return (
