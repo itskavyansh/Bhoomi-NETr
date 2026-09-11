@@ -1,3 +1,15 @@
+export type SensorStatus = "GOOD" | "UNSTABLE" | "INVALID" | "OFFLINE";
+export type DataQualityStatus = "GOOD" | "DEGRADED" | "INVALID";
+export type RiskLevel = "LOW" | "MODERATE" | "HIGH" | "CRITICAL";
+
+export interface SensorHealthState {
+  mpu6050: "GOOD" | "UNSTABLE" | "INVALID";
+  hcsr04: "GOOD" | "UNSTABLE" | "INVALID";
+  connectivity: "GOOD" | "UNSTABLE" | "OFFLINE";
+  data_quality: "GOOD" | "DEGRADED" | "INVALID";
+  issues?: string[];
+}
+
 export interface SensorReading {
   node_id: string;
   timestamp: string;
@@ -9,6 +21,13 @@ export interface SensorReading {
   status: "NORMAL" | "WARNING" | "CRITICAL";
   warnings: string[];
   risk_score: number;
+  // Subsidence Risk Index additions
+  risk_level: RiskLevel;
+  risk_factors: string[];
+  // Sensor Health & Confidence additions
+  sensor_confidence: number;
+  sensor_health: SensorHealthState;
+  confidence_warning?: string | null;
 }
 
 export interface TimePoint {

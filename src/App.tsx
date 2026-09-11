@@ -4,6 +4,8 @@ import { NotificationPanel } from "./components/NotificationPanel";
 import { Dashboard } from "./pages/Dashboard";
 import { Home } from "./pages/Home";
 import { NodeDetail } from "./pages/NodeDetail";
+import { RiskScore } from "./pages/RiskScore";
+import { StructuralHealth } from "./pages/StructuralHealth";
 
 export function App() {
   return (
@@ -13,6 +15,8 @@ export function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/structural-health" element={<StructuralHealth />} />
+          <Route path="/risk-score" element={<RiskScore />} />
           <Route path="/node/:nodeId" element={<NodeDetail />} />
         </Routes>
         <NotificationPanel />

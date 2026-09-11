@@ -1,7 +1,8 @@
 """Analysis engine for mine subsidence monitoring."""
 
 from .displacement import DEFAULT_BASELINE_DISTANCE, calculate_displacement
-from .risk import analyze_reading, assess_risk_level
+from .risk import analyze_reading, assess_risk_level, classify_risk_index_level
+from .sensor_health import evaluate_sensor_health
 from .thresholds import (
     DISPLACEMENT_THRESHOLD_CM,
     TILT_THRESHOLD_DEG,
@@ -21,5 +22,7 @@ __all__ = [
     "classify_vibration",
     "classify_displacement",
     "assess_risk_level",
+    "classify_risk_index_level",
+    "evaluate_sensor_health",
     "analyze_reading",
 ]

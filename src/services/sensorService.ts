@@ -50,6 +50,9 @@ function latestRowPerNode(rows: RawSensorRow[]): RawSensorRow[] {
   return Array.from(latestByNode.values());
 }
 
+// In-memory sliding buffer of raw rows per node for real-time trend & sensor health analysis
+const cachedNodeRows = new Map<string, RawSensorRow[]>();
+
 // In-memory cache of the latest readings per node to provide instantaneous Realtime updates
 const cachedLatestReadings = new Map<string, SensorReading>();
 
@@ -84,10 +87,24 @@ export async function fetchLatestReadings(): Promise<SensorReading[]> {
       throw error;
     }
 
-    const latestRows = latestRowPerNode(parseRawRows(data));
-    const analyzedReadings = latestRows.map((row) =>
-      analyzeReading(row, baselineForNode()),
-    );
+    const rawRows = parseRawRows(data);
+    
+    // Group recent rows by node for trend progression and health checks
+    for (const row of rawRows) {
+      if (!cachedNodeRows.has(row.node_id)) {
+        cachedNodeRows.set(row.node_id, []);
+      }
+      const historyList = cachedNodeRows.get(row.node_id)!;
+      if (historyList.length < 10) {
+        historyList.push(row);
+      }
+    }
+
+    const latestRows = latestRowPerNode(rawRows);
+    const analyzedReadings = latestRows.map((row) => {
+      const history = cachedNodeRows.get(row.node_id) ?? [];
+      return analyzeReading(row, baselineForNode(), history);
+    });
 
     // Keep cached map in sync
     for (const reading of analyzedReadings) {
@@ -178,7 +195,8 @@ export async function fetchAlertHistory(limit = 1000): Promise<AlertTransition[]
       if (!nodeHistories.has(row.node_id)) {
         nodeHistories.set(row.node_id, []);
       }
-      nodeHistories.get(row.node_id)!.push(analyzeReading(row, baseline));
+      const historySoFar = nodeHistories.get(row.node_id)!;
+      historySoFar.push(analyzeReading(row, baseline, historySoFar));
     }
 
     const transitions: AlertTransition[] = [];
@@ -251,7 +269,16 @@ export function subscribeToReadings(
           (payload) => {
             const raw = payload.new;
             if (isRawSensorRow(raw)) {
-              const analyzed = analyzeReading(raw, baselineForNode());
+              if (!cachedNodeRows.has(raw.node_id)) {
+                cachedNodeRows.set(raw.node_id, []);
+              }
+              const historyList = cachedNodeRows.get(raw.node_id)!;
+              historyList.push(raw);
+              if (historyList.length > 20) {
+                historyList.shift();
+              }
+
+              const analyzed = analyzeReading(raw, baselineForNode(), historyList);
               cachedLatestReadings.set(raw.node_id, analyzed);
               const updatedList = Array.from(cachedLatestReadings.values());
               realtimeListeners.forEach((listener) => {
