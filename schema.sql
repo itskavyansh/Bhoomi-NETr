@@ -30,11 +30,15 @@ CREATE TABLE IF NOT EXISTS public.sensor_readings (
     vibration   float8,
 
     -- Distance reading in cm or mm (depends on sensor spec — document before Phase 2)
-    distance    float8,
+    distance        float8,
+
+    -- Onboard hardware transducer diagnostic status ('ok' | 'fault')
+    mpu6050_status  text,
+    hc_sr04_status  text,
 
     -- Server-side insert timestamp — always set by Supabase, never overwritten
     -- Use this for auditing and lag detection (created_at vs timestamp diff)
-    created_at  timestamptz   NOT NULL DEFAULT now()
+    created_at      timestamptz   NOT NULL DEFAULT now()
 );
 
 -- -----------------------------------------------------------------------------

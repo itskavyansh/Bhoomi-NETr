@@ -27,11 +27,13 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
 // ---------------------------------------------------------------------------
 interface SensorPayload {
     node_id: string;
-    timestamp?: string;   // optional — hardware clocks can be unreliable
+    timestamp?: string;
     tilt_x: number;
     tilt_y: number;
     vibration: number;
     distance: number;
+    mpu6050_status: string;
+    hc_sr04_status: string;
 }
 
 interface ValidationError {
@@ -73,6 +75,22 @@ function validate(body: Record<string, unknown>): ValidationError[] {
             errors.push({ field, reason: "required but missing" });
         } else if (typeof val !== "number" || isNaN(val as number)) {
             errors.push({ field, reason: `must be a number, got ${typeof val} (${JSON.stringify(val)})` });
+        }
+    }
+
+    for (const field of ["mpu6050_status", "hc_sr04_status"] as const) {
+    const val = body[field];
+
+    if (val === undefined || val === null) {
+        errors.push({ field, reason: "required but missing" });
+    } else if (
+        typeof val !== "string" ||
+        !["ok", "fault"].includes(val)
+    ) {
+        errors.push({
+            field,
+            reason: "must be either 'ok' or 'fault'",
+            });
         }
     }
 
@@ -146,13 +164,18 @@ Deno.serve(async (req: Request) => {
     // Build the DB row — use server now() if timestamp was not provided
     const payload = body as SensorPayload;
     const row = {
-        node_id: payload.node_id.trim(),
-        timestamp: payload.timestamp ? new Date(payload.timestamp).toISOString() : new Date().toISOString(),
-        tilt_x: payload.tilt_x,
-        tilt_y: payload.tilt_y,
-        vibration: payload.vibration,
-        distance: payload.distance,
-        // created_at is handled by DB default — do not set here
+    node_id: payload.node_id.trim(),
+    timestamp: payload.timestamp
+        ? new Date(payload.timestamp).toISOString()
+        : new Date().toISOString(),
+
+    tilt_x: payload.tilt_x,
+    tilt_y: payload.tilt_y,
+    vibration: payload.vibration,
+    distance: payload.distance,
+
+    mpu6050_status: payload.mpu6050_status,
+    hc_sr04_status: payload.hc_sr04_status,
     };
 
     // Supabase client — service role bypasses RLS (safe because Edge Functions are server-side)

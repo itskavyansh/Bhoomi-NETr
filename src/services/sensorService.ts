@@ -22,6 +22,9 @@ function isRawSensorRow(value: unknown): value is RawSensorRow {
     return false;
   }
 
+  const isValidStatus = (s: unknown) =>
+    s === undefined || s === null || s === "ok" || s === "fault";
+
   return (
     (typeof value.id === "string" || typeof value.id === "number") &&
     typeof value.node_id === "string" &&
@@ -29,7 +32,10 @@ function isRawSensorRow(value: unknown): value is RawSensorRow {
     typeof value.tilt_x === "number" &&
     typeof value.tilt_y === "number" &&
     typeof value.vibration === "number" &&
-    typeof value.distance === "number"
+    typeof value.distance === "number" &&
+    isValidStatus(value.mpu6050_status) &&
+    isValidStatus(value.hc_sr04_status) &&
+    isValidStatus(value.sensor_status)
   );
 }
 
@@ -78,7 +84,7 @@ export async function fetchLatestReadings(): Promise<SensorReading[]> {
   try {
     const { data, error } = await supabase
       .from("sensor_readings")
-      .select("id, node_id, timestamp, tilt_x, tilt_y, vibration, distance")
+      .select("id, node_id, timestamp, tilt_x, tilt_y, vibration, distance, mpu6050_status, hc_sr04_status")
       .lte("timestamp", new Date().toISOString())
       .order("timestamp", { ascending: false })
       .limit(LATEST_ROW_WINDOW);
@@ -137,7 +143,7 @@ export async function fetchNodeHistory(
   try {
     let query = supabase
       .from("sensor_readings")
-      .select("id, node_id, timestamp, tilt_x, tilt_y, vibration, distance")
+      .select("id, node_id, timestamp, tilt_x, tilt_y, vibration, distance, mpu6050_status, hc_sr04_status")
       .eq("node_id", nodeId)
       .lte("timestamp", new Date().toISOString())
       .order("timestamp", { ascending: false });
@@ -211,7 +217,7 @@ export async function fetchAlertHistory(limit = 1000): Promise<AlertTransition[]
   try {
     const { data, error } = await supabase
       .from("sensor_readings")
-      .select("id, node_id, timestamp, tilt_x, tilt_y, vibration, distance")
+      .select("id, node_id, timestamp, tilt_x, tilt_y, vibration, distance, mpu6050_status, hc_sr04_status")
       .lte("timestamp", new Date().toISOString())
       .order("timestamp", { ascending: false })
       .limit(limit);

@@ -42,6 +42,28 @@ def evaluate_sensor_health(
     issues: List[str] = []
     penalty = 0
 
+    # Hardware sensor diagnostic status from firmware
+    raw_mpu_status = reading.get("mpu6050_status")
+    raw_hcsr04_status = reading.get("hc_sr04_status")
+    raw_sensor_status = reading.get("sensor_status")
+
+    mpu_fault = (
+        str(raw_mpu_status).strip().lower() == "fault"
+        or str(raw_sensor_status).strip().lower() == "fault"
+    )
+    hcsr04_fault = (
+        str(raw_hcsr04_status).strip().lower() == "fault"
+        or str(raw_sensor_status).strip().lower() == "fault"
+    )
+
+    if mpu_fault:
+        penalty += 50
+        issues.append("MPU6050 hardware transducer reported fault status ('fault')")
+
+    if hcsr04_fault:
+        penalty += 50
+        issues.append("HC-SR04 ultrasonic transducer reported fault status ('fault')")
+
     # Sensor status placeholders
     mpu_status = "GOOD"
     hcsr04_status = "GOOD"
@@ -130,10 +152,22 @@ def evaluate_sensor_health(
         penalty += 10
         issues.append("Timestamp absent or malformed in payload")
 
+    # Hardware fault overrides
+    if mpu_fault and mpu_status == "GOOD":
+        mpu_status = "BAD"
+    if hcsr04_fault and hcsr04_status == "GOOD":
+        hcsr04_status = "BAD"
+
     # Overall Data Quality Status
     if mpu_status == "INVALID" or hcsr04_status == "INVALID":
         data_quality_status = "INVALID"
-    elif mpu_status == "UNSTABLE" or hcsr04_status == "UNSTABLE" or connectivity_status == "UNSTABLE":
+    elif (
+        mpu_status == "UNSTABLE"
+        or hcsr04_status == "UNSTABLE"
+        or connectivity_status == "UNSTABLE"
+        or mpu_fault
+        or hcsr04_fault
+    ):
         data_quality_status = "DEGRADED"
     else:
         data_quality_status = "GOOD"
@@ -150,9 +184,16 @@ def evaluate_sensor_health(
         confidence_level = "LOW"
 
     confidence_warning = None
-    if sensor_confidence < 60:
-        warning_detail = issues[0] if issues else "Unreliable sensor telemetry"
-        confidence_warning = f"LOW SENSOR CONFIDENCE: {warning_detail}"
+    if sensor_confidence < 60 or mpu_fault or hcsr04_fault:
+        if mpu_fault and hcsr04_fault:
+            confidence_warning = "LOW SENSOR CONFIDENCE: Hardware fault reported across sensors"
+        elif mpu_fault:
+            confidence_warning = "LOW SENSOR CONFIDENCE: MPU6050 hardware fault reported"
+        elif hcsr04_fault:
+            confidence_warning = "LOW SENSOR CONFIDENCE: HC-SR04 hardware fault reported"
+        else:
+            warning_detail = issues[0] if issues else "Unreliable sensor telemetry"
+            confidence_warning = f"LOW SENSOR CONFIDENCE: {warning_detail}"
 
     return {
         "sensor_confidence": sensor_confidence,
@@ -162,6 +203,8 @@ def evaluate_sensor_health(
             "hcsr04": hcsr04_status,
             "connectivity": connectivity_status,
             "data_quality": data_quality_status,
+            "mpu6050_status": "fault" if mpu_fault else ("ok" if raw_mpu_status else None),
+            "hc_sr04_status": "fault" if hcsr04_fault else ("ok" if raw_hcsr04_status else None),
         },
         "issues": issues,
         "confidence_warning": confidence_warning,

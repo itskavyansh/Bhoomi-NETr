@@ -52,8 +52,21 @@ export function evaluateSensorHealth(
   const issues: string[] = [];
   let penalty = 0;
 
-  let mpuStatus: "GOOD" | "UNSTABLE" | "INVALID" = "GOOD";
-  let hcsr04Status: "GOOD" | "UNSTABLE" | "INVALID" = "GOOD";
+  // Hardware diagnostic status from firmware
+  const mpuFault = raw.mpu6050_status === "fault" || raw.sensor_status === "fault";
+  const hcsr04Fault = raw.hc_sr04_status === "fault" || raw.sensor_status === "fault";
+
+  if (mpuFault) {
+    penalty += 50;
+    issues.push("MPU6050 hardware transducer reported fault status ('fault')");
+  }
+  if (hcsr04Fault) {
+    penalty += 50;
+    issues.push("HC-SR04 ultrasonic transducer reported fault status ('fault')");
+  }
+
+  let mpuStatus: "GOOD" | "UNSTABLE" | "INVALID" | "BAD" = "GOOD";
+  let hcsr04Status: "GOOD" | "UNSTABLE" | "INVALID" | "BAD" = "GOOD";
   let connectivityStatus: "GOOD" | "UNSTABLE" | "OFFLINE" = "GOOD";
   let dataQualityStatus: DataQualityStatus = "GOOD";
 
@@ -131,10 +144,20 @@ export function evaluateSensorHealth(
     issues.push("Timestamp absent or malformed");
   }
 
+  // Hardware fault overrides
+  if (mpuFault && mpuStatus === "GOOD") mpuStatus = "BAD";
+  if (hcsr04Fault && hcsr04Status === "GOOD") hcsr04Status = "BAD";
+
   // Overall Data Quality
   if (mpuStatus === "INVALID" || hcsr04Status === "INVALID") {
     dataQualityStatus = "INVALID";
-  } else if (mpuStatus === "UNSTABLE" || hcsr04Status === "UNSTABLE" || connectivityStatus === "UNSTABLE") {
+  } else if (
+    mpuStatus === "UNSTABLE" ||
+    hcsr04Status === "UNSTABLE" ||
+    connectivityStatus === "UNSTABLE" ||
+    mpuFault ||
+    hcsr04Fault
+  ) {
     dataQualityStatus = "DEGRADED";
   } else {
     dataQualityStatus = "GOOD";
@@ -143,8 +166,16 @@ export function evaluateSensorHealth(
   const confidenceScore = Math.max(0, Math.min(100, 100 - penalty));
 
   let confidenceWarning: string | null = null;
-  if (confidenceScore < 60) {
-    confidenceWarning = `LOW SENSOR CONFIDENCE: ${issues[0] || "Unreliable sensor telemetry"}`;
+  if (confidenceScore < 60 || mpuFault || hcsr04Fault) {
+    if (mpuFault && hcsr04Fault) {
+      confidenceWarning = "LOW SENSOR CONFIDENCE: Hardware fault reported across sensors";
+    } else if (mpuFault) {
+      confidenceWarning = "LOW SENSOR CONFIDENCE: MPU6050 hardware fault reported";
+    } else if (hcsr04Fault) {
+      confidenceWarning = "LOW SENSOR CONFIDENCE: HC-SR04 hardware fault reported";
+    } else {
+      confidenceWarning = `LOW SENSOR CONFIDENCE: ${issues[0] || "Unreliable sensor telemetry"}`;
+    }
   }
 
   return {
@@ -154,6 +185,9 @@ export function evaluateSensorHealth(
       hcsr04: hcsr04Status,
       connectivity: connectivityStatus,
       data_quality: dataQualityStatus,
+      mpu6050_status: mpuFault ? "fault" : (raw.mpu6050_status ?? null),
+      hc_sr04_status: hcsr04Fault ? "fault" : (raw.hc_sr04_status ?? null),
+      sensor_status: mpuFault || hcsr04Fault ? "fault" : (raw.sensor_status ?? null),
       issues,
     },
     confidence_warning: confidenceWarning,
@@ -285,6 +319,9 @@ export function analyzeReading(
     risk_factors,
     sensor_confidence: healthEvaluation.sensor_confidence,
     sensor_health: healthEvaluation.sensor_health,
+    mpu6050_status: raw.mpu6050_status,
+    hc_sr04_status: raw.hc_sr04_status,
+    sensor_status: raw.sensor_status,
     confidence_warning: healthEvaluation.confidence_warning,
   };
 }

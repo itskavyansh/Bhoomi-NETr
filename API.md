@@ -27,6 +27,8 @@ Strict adherence to the Phase 1 Data Contract is required.
 | `tilt_y` | Number | **Yes** | Must be a true JSON number, not a string |
 | `vibration`| Number | **Yes** | Must be a true JSON number, not a string |
 | `distance` | Number | **Yes** | Must be a true JSON number, not a string |
+| `mpu6050_status` | String | **Yes** | `"ok"` or `"fault"` |
+| `hc_sr04_status` | String | **Yes** | `"ok"` or `"fault"` |
 
 ---
 
