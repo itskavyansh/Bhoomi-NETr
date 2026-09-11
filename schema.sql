@@ -30,11 +30,15 @@ CREATE TABLE IF NOT EXISTS public.sensor_readings (
     vibration   float8,
 
     -- Distance reading in cm or mm (depends on sensor spec — document before Phase 2)
-    distance    float8,
+    distance       float8,
+
+    -- Onboard hardware transducer diagnostic status ('ok' | 'fault')
+    -- Nullable, no default — absence indicates older/unknown firmware
+    sensor_status  text,
 
     -- Server-side insert timestamp — always set by Supabase, never overwritten
     -- Use this for auditing and lag detection (created_at vs timestamp diff)
-    created_at  timestamptz   NOT NULL DEFAULT now()
+    created_at     timestamptz   NOT NULL DEFAULT now()
 );
 
 -- -----------------------------------------------------------------------------
@@ -78,18 +82,37 @@ ALTER TABLE public.sensor_readings DISABLE ROW LEVEL SECURITY;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.sensor_readings;
 
 -- -----------------------------------------------------------------------------
--- VERIFICATION QUERY (run this after creating the table to confirm structure)
+-- TABLE: alert_logs
+-- Records every SMS alert dispatched by the backend for auditing and tracking.
 -- -----------------------------------------------------------------------------
--- SELECT column_name, data_type, is_nullable, column_default
--- FROM information_schema.columns
--- WHERE table_name = 'sensor_readings'
--- ORDER BY ordinal_position;
+CREATE TABLE IF NOT EXISTS public.alert_logs (
+    id            bigint        GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    node_id       text          NOT NULL,
+    risk_level    text          NOT NULL,
+    risk_score    int           NOT NULL,
+    message       text          NOT NULL,
+    phone_number  text          NOT NULL,
+    sms_status    text          NOT NULL, -- 'SMS_REQUEST_ACCEPTED', 'FAILED', 'DISABLED', 'SKIPPED_COOLDOWN'
+    request_id    text,
+    error_detail  text,
+    created_at    timestamptz   NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_alert_logs_node_created
+    ON public.alert_logs (node_id, created_at DESC);
 
 -- -----------------------------------------------------------------------------
--- TEST INSERT  (run manually in Supabase SQL Editor to confirm a row appears)
--- Node: NODE_01, as per team data contract example
+-- TABLE: node_alert_states
+-- Tracks per-node risk status and last alert timestamps for distributed deduplication.
 -- -----------------------------------------------------------------------------
--- INSERT INTO public.sensor_readings (node_id, "timestamp", tilt_x, tilt_y, vibration, distance)
--- VALUES ('NODE_01', '2026-09-05T12:30:00Z', 7.2, 3.8, 0.34, 18.4);
+CREATE TABLE IF NOT EXISTS public.node_alert_states (
+    node_id             text          PRIMARY KEY,
+    last_status         text          NOT NULL DEFAULT 'NORMAL',
+    last_alert_sent_at  timestamptz,
+    last_risk_score     int           NOT NULL DEFAULT 0,
+    updated_at          timestamptz   NOT NULL DEFAULT now()
+);
 
--- SELECT * FROM public.sensor_readings ORDER BY "timestamp" DESC LIMIT 5;
+ALTER TABLE public.alert_logs DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.node_alert_states DISABLE ROW LEVEL SECURITY;
+

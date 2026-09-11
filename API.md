@@ -27,6 +27,7 @@ Strict adherence to the Phase 1 Data Contract is required.
 | `tilt_y` | Number | **Yes** | Must be a true JSON number, not a string |
 | `vibration`| Number | **Yes** | Must be a true JSON number, not a string |
 | `distance` | Number | **Yes** | Must be a true JSON number, not a string |
+| `sensor_status` | String | No | Onboard hardware diagnostic status: `"ok"` or `"fault"`. If omitted, server assumes legacy/unknown firmware. |
 
 ---
 

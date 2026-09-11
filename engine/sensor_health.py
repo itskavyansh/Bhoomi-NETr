@@ -42,6 +42,19 @@ def evaluate_sensor_health(
     issues: List[str] = []
     penalty = 0
 
+    # 0. Hardware sensor status from firmware ('ok' | 'fault')
+    raw_sensor_status = reading.get("sensor_status")
+    sensor_status_val = (
+        str(raw_sensor_status).strip().lower()
+        if raw_sensor_status is not None and str(raw_sensor_status).strip() != ""
+        else None
+    )
+    hardware_fault = sensor_status_val == "fault"
+
+    if hardware_fault:
+        penalty += 50
+        issues.append("Hardware transducer reported fault status ('fault')")
+
     # Sensor status placeholders
     mpu_status = "GOOD"
     hcsr04_status = "GOOD"
@@ -130,13 +143,24 @@ def evaluate_sensor_health(
         penalty += 10
         issues.append("Timestamp absent or malformed in payload")
 
-    # Overall Data Quality Status
-    if mpu_status == "INVALID" or hcsr04_status == "INVALID":
-        data_quality_status = "INVALID"
-    elif mpu_status == "UNSTABLE" or hcsr04_status == "UNSTABLE" or connectivity_status == "UNSTABLE":
-        data_quality_status = "DEGRADED"
+    # Hardware fault override:
+    # If sensor_status == "fault" is present on a reading, that sensor's health must show as degraded/BAD
+    # regardless of what the plausibility check concludes — hardware fault signal always overrides inferred health.
+    if hardware_fault:
+        if mpu_status == "GOOD":
+            mpu_status = "BAD"
+        if hcsr04_status == "GOOD":
+            hcsr04_status = "BAD"
+        if data_quality_status == "GOOD":
+            data_quality_status = "DEGRADED"
     else:
-        data_quality_status = "GOOD"
+        # Overall Data Quality Status
+        if mpu_status == "INVALID" or hcsr04_status == "INVALID":
+            data_quality_status = "INVALID"
+        elif mpu_status == "UNSTABLE" or hcsr04_status == "UNSTABLE" or connectivity_status == "UNSTABLE":
+            data_quality_status = "DEGRADED"
+        else:
+            data_quality_status = "GOOD"
 
     # Compute final Confidence Score (0-100)
     raw_confidence = 100 - penalty
@@ -150,9 +174,12 @@ def evaluate_sensor_health(
         confidence_level = "LOW"
 
     confidence_warning = None
-    if sensor_confidence < 60:
-        warning_detail = issues[0] if issues else "Unreliable sensor telemetry"
-        confidence_warning = f"LOW SENSOR CONFIDENCE: {warning_detail}"
+    if sensor_confidence < 60 or hardware_fault:
+        if hardware_fault:
+            confidence_warning = "LOW SENSOR CONFIDENCE: Hardware fault reported by sensor firmware"
+        else:
+            warning_detail = issues[0] if issues else "Unreliable sensor telemetry"
+            confidence_warning = f"LOW SENSOR CONFIDENCE: {warning_detail}"
 
     return {
         "sensor_confidence": sensor_confidence,
@@ -162,7 +189,9 @@ def evaluate_sensor_health(
             "hcsr04": hcsr04_status,
             "connectivity": connectivity_status,
             "data_quality": data_quality_status,
+            "sensor_status": sensor_status_val if sensor_status_val in ("ok", "fault") else None,
         },
         "issues": issues,
         "confidence_warning": confidence_warning,
     }
+

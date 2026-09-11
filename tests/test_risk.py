@@ -207,3 +207,44 @@ def test_analyze_reading_with_progression_history():
     result = analyze_reading(reading, history=history)
     assert result["status"] == "CRITICAL"
     assert any("Accelerating displacement progression" in f for f in result["risk_factors"])
+
+
+def test_sensor_health_hardware_fault_override():
+    # Reading has physically plausible values, but firmware reports hardware fault
+    fault_reading = {
+        "node_id": "NODE_01",
+        "timestamp": "2026-09-05T12:00:00Z",
+        "tilt_x": 3.5,
+        "tilt_y": 2.1,
+        "vibration": 0.15,
+        "distance": 19.8,
+        "sensor_status": "fault",
+    }
+    health = evaluate_sensor_health(fault_reading)
+    # Even with valid telemetry, confidence must drop below 100% (penalty 50 -> 50%)
+    assert health["sensor_confidence"] <= 50
+    assert health["confidence_level"] == "LOW"
+    assert health["sensor_health"]["mpu6050"] == "BAD"
+    assert health["sensor_health"]["hcsr04"] == "BAD"
+    assert health["sensor_health"]["data_quality"] == "DEGRADED"
+    assert health["sensor_health"]["sensor_status"] == "fault"
+    assert health["confidence_warning"] == "LOW SENSOR CONFIDENCE: Hardware fault reported by sensor firmware"
+
+
+def test_sensor_health_hardware_ok_status():
+    ok_reading = {
+        "node_id": "NODE_01",
+        "timestamp": "2026-09-05T12:00:00Z",
+        "tilt_x": 3.5,
+        "tilt_y": 2.1,
+        "vibration": 0.15,
+        "distance": 19.8,
+        "sensor_status": "ok",
+    }
+    health = evaluate_sensor_health(ok_reading)
+    assert health["sensor_confidence"] >= 90
+    assert health["sensor_health"]["mpu6050"] == "GOOD"
+    assert health["sensor_health"]["hcsr04"] == "GOOD"
+    assert health["sensor_health"]["sensor_status"] == "ok"
+    assert health["confidence_warning"] is None
+

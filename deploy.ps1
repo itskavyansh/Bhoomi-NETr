@@ -26,10 +26,16 @@ Write-Host "2/4  Linking to project $REF..."
 supabase link --project-ref $REF
 
 Write-Host "3/4  Setting Edge Function secrets..."
-supabase secrets set `
-  SUPABASE_URL=$URL `
-  SUPABASE_SERVICE_ROLE_KEY=$SRK `
-  --project-ref $REF
+$SECRET_ARGS = @(
+  "APP_DB_URL=$URL",
+  "APP_DB_SERVICE_KEY=$SRK"
+)
+if ($Env:FAST2SMS_API_KEY) { $SECRET_ARGS += "FAST2SMS_API_KEY=$Env:FAST2SMS_API_KEY" }
+if ($Env:ALERT_PHONE_NUMBER) { $SECRET_ARGS += "ALERT_PHONE_NUMBER=$Env:ALERT_PHONE_NUMBER" }
+if ($Env:ALERT_COOLDOWN_MINUTES) { $SECRET_ARGS += "ALERT_COOLDOWN_MINUTES=$Env:ALERT_COOLDOWN_MINUTES" }
+if ($Env:SMS_ALERTS_ENABLED) { $SECRET_ARGS += "SMS_ALERTS_ENABLED=$Env:SMS_ALERTS_ENABLED" }
+
+supabase secrets set @SECRET_ARGS --project-ref $REF
 
 Write-Host "4/4  Deploying sensor-data function..."
 supabase functions deploy sensor-data --project-ref $REF

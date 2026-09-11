@@ -1,12 +1,13 @@
-export type SensorStatus = "GOOD" | "UNSTABLE" | "INVALID" | "OFFLINE";
+export type SensorStatus = "GOOD" | "UNSTABLE" | "INVALID" | "OFFLINE" | "BAD";
 export type DataQualityStatus = "GOOD" | "DEGRADED" | "INVALID";
 export type RiskLevel = "LOW" | "MODERATE" | "HIGH" | "CRITICAL";
 
 export interface SensorHealthState {
-  mpu6050: "GOOD" | "UNSTABLE" | "INVALID";
-  hcsr04: "GOOD" | "UNSTABLE" | "INVALID";
+  mpu6050: "GOOD" | "UNSTABLE" | "INVALID" | "BAD";
+  hcsr04: "GOOD" | "UNSTABLE" | "INVALID" | "BAD";
   connectivity: "GOOD" | "UNSTABLE" | "OFFLINE";
   data_quality: "GOOD" | "DEGRADED" | "INVALID";
+  sensor_status?: "ok" | "fault" | null;
   issues?: string[];
 }
 
@@ -27,6 +28,7 @@ export interface SensorReading {
   // Sensor Health & Confidence additions
   sensor_confidence: number;
   sensor_health: SensorHealthState;
+  sensor_status?: "ok" | "fault" | null;
   confidence_warning?: string | null;
 }
 
@@ -49,4 +51,5 @@ export type RawSensorRow = {
   tilt_y: number;
   vibration: number;
   distance: number;
+  sensor_status?: "ok" | "fault" | null;
 };

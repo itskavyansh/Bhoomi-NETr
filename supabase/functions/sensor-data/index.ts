@@ -8,6 +8,8 @@
 // =============================================================================
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { evaluateRisk } from "./risk.ts";
+import { processRiskAlert } from "./sms.ts";
 
 // ---------------------------------------------------------------------------
 // Environment variables (set via: supabase secrets set KEY=value)
@@ -32,6 +34,7 @@ interface SensorPayload {
     tilt_y: number;
     vibration: number;
     distance: number;
+    sensor_status?: string;
 }
 
 interface ValidationError {
@@ -65,6 +68,13 @@ function validate(body: Record<string, unknown>): ValidationError[] {
         }
     }
     // NOTE: if timestamp is missing, we default to server now() — do not reject.
+
+    // sensor_status: optional — if present, must be exactly "ok" or "fault"
+    if (body.sensor_status !== undefined && body.sensor_status !== null) {
+        if (typeof body.sensor_status !== "string" || (body.sensor_status !== "ok" && body.sensor_status !== "fault")) {
+            errors.push({ field: "sensor_status", reason: 'must be either "ok" or "fault" if provided' });
+        }
+    }
 
     // Numeric sensor fields: required, must be actual numbers (not strings, not null)
     for (const field of ["tilt_x", "tilt_y", "vibration", "distance"] as const) {
@@ -152,6 +162,7 @@ Deno.serve(async (req: Request) => {
         tilt_y: payload.tilt_y,
         vibration: payload.vibration,
         distance: payload.distance,
+        sensor_status: payload.sensor_status ?? null,
         // created_at is handled by DB default — do not set here
     };
 
@@ -178,6 +189,16 @@ Deno.serve(async (req: Request) => {
         );
     }
 
+    // Trigger authoritative risk assessment & automated SMS alert dispatch
+    try {
+        const risk = evaluateRisk(payload);
+        await processRiskAlert(supabase, risk);
+    } catch (alertErr) {
+        // Guarantee that SMS alerting issues NEVER crash or block the ingestion pipeline
+        console.error("Non-fatal SMS alert processing exception:", alertErr);
+    }
+
     // 201 Created — return the inserted row so the caller can confirm the id/created_at
     return jsonResponse(data, 201);
 });
+

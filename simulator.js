@@ -65,8 +65,9 @@ if (!ENDPOINT || !ANON_KEY) {
 
 const SCENARIO = getFlag("scenario") ?? "normal";
 const TARGET_NODE = getFlag("node") ?? null;
+const SENSOR_STATUS_ARG = getFlag("sensor-status") ?? null;
 
-const VALID_SCENARIOS = ["normal", "excessive_tilt", "high_vibration", "critical", "progressive_failure"];
+const VALID_SCENARIOS = ["normal", "excessive_tilt", "high_vibration", "critical", "progressive_failure", "hardware_fault"];
 if (!VALID_SCENARIOS.includes(SCENARIO)) {
     console.error(`[FATAL] Unknown scenario "${SCENARIO}". Valid: ${VALID_SCENARIOS.join(", ")}`);
     process.exit(1);
@@ -206,6 +207,13 @@ function nextReading(state) {
     state.distance = distance;
     state.tick++;
 
+    const sensorStatus =
+        SENSOR_STATUS_ARG !== null
+            ? SENSOR_STATUS_ARG
+            : SCENARIO === "hardware_fault"
+            ? "fault"
+            : "ok";
+
     return {
         node_id: state.nodeId,
         timestamp: new Date().toISOString(),
@@ -213,6 +221,7 @@ function nextReading(state) {
         tilt_y: round(tilt_y, 2),
         vibration: round(vibration, 3),
         distance: round(distance, 2),
+        sensor_status: sensorStatus,
     };
 }
 

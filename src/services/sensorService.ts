@@ -22,6 +22,12 @@ function isRawSensorRow(value: unknown): value is RawSensorRow {
     return false;
   }
 
+  const sensorStatusValid =
+    value.sensor_status === undefined ||
+    value.sensor_status === null ||
+    value.sensor_status === "ok" ||
+    value.sensor_status === "fault";
+
   return (
     (typeof value.id === "string" || typeof value.id === "number") &&
     typeof value.node_id === "string" &&
@@ -29,7 +35,8 @@ function isRawSensorRow(value: unknown): value is RawSensorRow {
     typeof value.tilt_x === "number" &&
     typeof value.tilt_y === "number" &&
     typeof value.vibration === "number" &&
-    typeof value.distance === "number"
+    typeof value.distance === "number" &&
+    sensorStatusValid
   );
 }
 
@@ -78,7 +85,7 @@ export async function fetchLatestReadings(): Promise<SensorReading[]> {
   try {
     const { data, error } = await supabase
       .from("sensor_readings")
-      .select("id, node_id, timestamp, tilt_x, tilt_y, vibration, distance")
+      .select("id, node_id, timestamp, tilt_x, tilt_y, vibration, distance, sensor_status")
       .lte("timestamp", new Date().toISOString())
       .order("timestamp", { ascending: false })
       .limit(LATEST_ROW_WINDOW);
@@ -137,7 +144,7 @@ export async function fetchNodeHistory(
   try {
     let query = supabase
       .from("sensor_readings")
-      .select("id, node_id, timestamp, tilt_x, tilt_y, vibration, distance")
+      .select("id, node_id, timestamp, tilt_x, tilt_y, vibration, distance, sensor_status")
       .eq("node_id", nodeId)
       .lte("timestamp", new Date().toISOString())
       .order("timestamp", { ascending: false });
@@ -211,7 +218,7 @@ export async function fetchAlertHistory(limit = 1000): Promise<AlertTransition[]
   try {
     const { data, error } = await supabase
       .from("sensor_readings")
-      .select("id, node_id, timestamp, tilt_x, tilt_y, vibration, distance")
+      .select("id, node_id, timestamp, tilt_x, tilt_y, vibration, distance, sensor_status")
       .lte("timestamp", new Date().toISOString())
       .order("timestamp", { ascending: false })
       .limit(limit);

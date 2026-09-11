@@ -52,8 +52,21 @@ export function evaluateSensorHealth(
   const issues: string[] = [];
   let penalty = 0;
 
-  let mpuStatus: "GOOD" | "UNSTABLE" | "INVALID" = "GOOD";
-  let hcsr04Status: "GOOD" | "UNSTABLE" | "INVALID" = "GOOD";
+  // 0. Hardware sensor status from firmware ('ok' | 'fault')
+  const rawSensorStatus = raw.sensor_status;
+  const sensorStatusVal =
+    rawSensorStatus && typeof rawSensorStatus === "string" && rawSensorStatus.trim() !== ""
+      ? (rawSensorStatus.trim().toLowerCase() as "ok" | "fault")
+      : null;
+  const hardwareFault = sensorStatusVal === "fault";
+
+  if (hardwareFault) {
+    penalty += 50;
+    issues.push("Hardware transducer reported fault status ('fault')");
+  }
+
+  let mpuStatus: "GOOD" | "UNSTABLE" | "INVALID" | "BAD" = "GOOD";
+  let hcsr04Status: "GOOD" | "UNSTABLE" | "INVALID" | "BAD" = "GOOD";
   let connectivityStatus: "GOOD" | "UNSTABLE" | "OFFLINE" = "GOOD";
   let dataQualityStatus: DataQualityStatus = "GOOD";
 
@@ -131,20 +144,33 @@ export function evaluateSensorHealth(
     issues.push("Timestamp absent or malformed");
   }
 
-  // Overall Data Quality
-  if (mpuStatus === "INVALID" || hcsr04Status === "INVALID") {
-    dataQualityStatus = "INVALID";
-  } else if (mpuStatus === "UNSTABLE" || hcsr04Status === "UNSTABLE" || connectivityStatus === "UNSTABLE") {
-    dataQualityStatus = "DEGRADED";
+  // Hardware fault override:
+  // If sensor_status == "fault" is present on a reading, that sensor's health must show as degraded/BAD
+  // regardless of what the plausibility check concludes — hardware fault signal always overrides inferred health.
+  if (hardwareFault) {
+    if (mpuStatus === "GOOD") mpuStatus = "BAD";
+    if (hcsr04Status === "GOOD") hcsr04Status = "BAD";
+    if (dataQualityStatus === "GOOD") dataQualityStatus = "DEGRADED";
   } else {
-    dataQualityStatus = "GOOD";
+    // Overall Data Quality
+    if (mpuStatus === "INVALID" || hcsr04Status === "INVALID") {
+      dataQualityStatus = "INVALID";
+    } else if (mpuStatus === "UNSTABLE" || hcsr04Status === "UNSTABLE" || connectivityStatus === "UNSTABLE") {
+      dataQualityStatus = "DEGRADED";
+    } else {
+      dataQualityStatus = "GOOD";
+    }
   }
 
   const confidenceScore = Math.max(0, Math.min(100, 100 - penalty));
 
   let confidenceWarning: string | null = null;
-  if (confidenceScore < 60) {
-    confidenceWarning = `LOW SENSOR CONFIDENCE: ${issues[0] || "Unreliable sensor telemetry"}`;
+  if (confidenceScore < 60 || hardwareFault) {
+    if (hardwareFault) {
+      confidenceWarning = "LOW SENSOR CONFIDENCE: Hardware fault reported by sensor firmware";
+    } else {
+      confidenceWarning = `LOW SENSOR CONFIDENCE: ${issues[0] || "Unreliable sensor telemetry"}`;
+    }
   }
 
   return {
@@ -154,6 +180,7 @@ export function evaluateSensorHealth(
       hcsr04: hcsr04Status,
       connectivity: connectivityStatus,
       data_quality: dataQualityStatus,
+      sensor_status: sensorStatusVal === "ok" || sensorStatusVal === "fault" ? sensorStatusVal : null,
       issues,
     },
     confidence_warning: confidenceWarning,
@@ -285,6 +312,7 @@ export function analyzeReading(
     risk_factors,
     sensor_confidence: healthEvaluation.sensor_confidence,
     sensor_health: healthEvaluation.sensor_health,
+    sensor_status: raw.sensor_status,
     confidence_warning: healthEvaluation.confidence_warning,
   };
 }
