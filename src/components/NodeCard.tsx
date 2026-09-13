@@ -7,7 +7,7 @@ interface NodeCardProps {
 }
 
 // Real severity sorting would rank CRITICAL-associated codes above WARNING-only
-// codes once Person 2 publishes per-warning severity. Current codes are equal.
+// codes once per-warning severity is published. Current codes are equal.
 const WARNING_SEVERITY: Record<string, number> = {
   EXCESSIVE_TILT: 1,
   HIGH_VIBRATION: 1,
@@ -20,36 +20,103 @@ function sortWarnings(warnings: string[]): string[] {
   );
 }
 
-export function NodeCard({ reading }: NodeCardProps) {
-  // Determine background and border colors based on status
-  const cardStyleClass = 
-    reading.status === "CRITICAL" ? "bg-status-critical-tint border-status-critical shadow-status-critical-bg animate-critical-border" : 
-    reading.status === "WARNING" ? "bg-status-watch-tint border-status-watch" : 
-    "bg-surface-card border-surface-border";
+/* ── Status-specific visual treatment ── */
+const CARD_STATUS: Record<
+  SensorReading["status"],
+  { border: string; animation: string }
+> = {
+  NORMAL:   { border: "border-[var(--card-border)] border-l-4 border-l-[var(--brand-teal)]", animation: "" },
+  WARNING:  { border: "border-[var(--card-border)] border-l-4 border-l-[var(--status-warning)]", animation: "" },
+  CRITICAL: { border: "border-[var(--card-border)] border-l-4 border-l-[var(--status-danger)]", animation: "animate-critical-border" },
+};
 
-  const tiltFlags = reading.warnings.filter(w => w === "EXCESSIVE_TILT");
-  const vibrationFlags = reading.warnings.filter(w => w === "HIGH_VIBRATION");
-  const displacementFlags = reading.warnings.filter(w => w === "ABNORMAL_DISPLACEMENT");
-  
-  const unmappedWarnings = reading.warnings.filter(w => 
-    w !== "EXCESSIVE_TILT" && 
-    w !== "HIGH_VIBRATION" && 
-    w !== "ABNORMAL_DISPLACEMENT"
+export function NodeCard({ reading }: NodeCardProps) {
+  const style = CARD_STATUS[reading.status];
+
+  const tiltFlags        = reading.warnings.filter((w) => w === "EXCESSIVE_TILT");
+  const vibrationFlags   = reading.warnings.filter((w) => w === "HIGH_VIBRATION");
+  const displacementFlags = reading.warnings.filter((w) => w === "ABNORMAL_DISPLACEMENT");
+  const unmappedWarnings = reading.warnings.filter(
+    (w) =>
+      w !== "EXCESSIVE_TILT" &&
+      w !== "HIGH_VIBRATION" &&
+      w !== "ABNORMAL_DISPLACEMENT",
   );
 
   return (
-    <article className={`flex h-full flex-col rounded-xl border p-5 shadow-[0_14px_32px_rgba(0,0,0,0.16)] transition-all duration-300 hover:-translate-y-0.5 hover:border-surface-border-hover ${cardStyleClass}`}>
-      <header className="mb-5 flex items-center justify-between gap-4">
-        <div><p className="eyebrow mb-1">Monitoring point</p><h2 className="text-lg font-bold tracking-tight text-slate-100">
-          NODE {reading.node_id}
-        </h2></div>
-        <StatusBadge status={reading.status} />
+    <article
+      className={`flex h-full flex-col rounded-lg border bg-[var(--card-bg)] ${style.border} ${style.animation} p-4 sm:p-5 shadow-xs transition-all duration-200 hover:-translate-y-px hover:border-[var(--card-border-hover)] hover:shadow-md min-w-0`}
+    >
+      {/* Header */}
+      <header className="mb-4 flex items-start justify-between gap-3 min-w-0">
+        <div className="min-w-0">
+          <p className="eyebrow mb-0.5">Monitoring point</p>
+          <h2 className="text-base font-bold tracking-tight text-[var(--text-primary)] truncate">
+            {reading.node_id}
+          </h2>
+        </div>
+        <div className="shrink-0">
+          <StatusBadge status={reading.status} />
+        </div>
       </header>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 flex-1">
-        <MetricTile label="Tilt X" value={reading.tilt_x} unit="°" activeFlags={Math.abs(reading.tilt_x) >= 15 ? tiltFlags : []} />
-        <MetricTile label="Tilt Y" value={reading.tilt_y} unit="°" activeFlags={Math.abs(reading.tilt_y) >= 15 ? tiltFlags : []} />
-        <MetricTile label="Vibration" value={reading.vibration} unit="g" activeFlags={vibrationFlags} />
+      {/* Risk score bar */}
+      <div className="mb-4 min-w-0">
+        <div className="mb-1.5 flex items-center justify-between gap-2">
+          <span className="text-[0.68rem] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+            Subsidence Risk Index
+          </span>
+          <span className="font-mono text-sm font-bold text-[var(--text-primary)]">
+            {reading.risk_score}
+            <span className="ml-0.5 text-xs font-normal text-[var(--text-muted)]">
+              / 100
+            </span>
+          </span>
+        </div>
+        <div
+          className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--surface-muted)]"
+          role="progressbar"
+          aria-valuenow={reading.risk_score}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={`Risk score: ${reading.risk_score} out of 100`}
+        >
+          <div
+            className={`h-full rounded-full transition-all duration-500 ${
+              reading.risk_score >= 70
+                ? "bg-[var(--status-danger)]"
+                : reading.risk_score >= 40
+                ? "bg-[var(--status-warning)]"
+                : "bg-[var(--status-success)]"
+            }`}
+            style={{ width: `${Math.min(reading.risk_score, 100)}%` }}
+          />
+        </div>
+        <p className="mt-1 text-[0.68rem] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+          {reading.risk_level}
+        </p>
+      </div>
+
+      {/* Metric grid */}
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 flex-1 min-w-0">
+        <MetricTile
+          label="Tilt X"
+          value={reading.tilt_x}
+          unit="°"
+          activeFlags={Math.abs(reading.tilt_x) >= 15 ? tiltFlags : []}
+        />
+        <MetricTile
+          label="Tilt Y"
+          value={reading.tilt_y}
+          unit="°"
+          activeFlags={Math.abs(reading.tilt_y) >= 15 ? tiltFlags : []}
+        />
+        <MetricTile
+          label="Vibration"
+          value={reading.vibration}
+          unit="g"
+          activeFlags={vibrationFlags}
+        />
         <MetricTile label="Distance" value={reading.distance} unit="cm" />
         <MetricTile
           label="Displacement"
@@ -57,45 +124,70 @@ export function NodeCard({ reading }: NodeCardProps) {
           unit="cm"
           activeFlags={displacementFlags}
         />
-      </div>
-
-      {/* Piezo Electric Acoustic Channel */}
-      <div className="mt-4 pt-3 border-t border-slate-800/80">
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-[0.68rem] font-semibold uppercase tracking-wider text-teal-400">
-            PIEZO ELECTRIC
+        {/* Sensor confidence */}
+        <div className="flex flex-col rounded-lg border border-[var(--border)] bg-[var(--surface-alt)] px-3 py-2 sm:py-2.5 h-full min-w-0">
+          <p className="min-w-0 break-words text-[0.64rem] font-semibold uppercase leading-tight tracking-[0.035em] text-[var(--text-muted)] truncate">
+            Confidence
           </p>
-          <span className="text-[10px] font-mono text-slate-500">ADS1115 (A0)</span>
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-          <div className="rounded-lg border border-surface-border bg-surface-tile px-2.5 py-2">
-            <p className="text-[0.62rem] font-semibold uppercase text-slate-400">Peak</p>
-            <p className="mt-0.5 font-mono text-sm font-bold text-slate-100">
-              {reading.piezo_peak != null ? reading.piezo_peak.toFixed(4) : "—"}
-              <span className="ml-1 text-[10px] font-normal text-slate-400">V</span>
-            </p>
-          </div>
-          <div className="rounded-lg border border-surface-border bg-surface-tile px-2.5 py-2">
-            <p className="text-[0.62rem] font-semibold uppercase text-slate-400">RMS</p>
-            <p className="mt-0.5 font-mono text-sm font-bold text-slate-100">
-              {reading.piezo_rms != null ? reading.piezo_rms.toFixed(4) : "—"}
-              <span className="ml-1 text-[10px] font-normal text-slate-400">V</span>
-            </p>
-          </div>
-          <div className="rounded-lg border border-surface-border bg-surface-tile px-2.5 py-2">
-            <p className="text-[0.62rem] font-semibold uppercase text-slate-400">Peak-to-Peak</p>
-            <p className="mt-0.5 font-mono text-sm font-bold text-slate-100">
-              {reading.piezo_peak_to_peak != null ? reading.piezo_peak_to_peak.toFixed(4) : "—"}
-              <span className="ml-1 text-[10px] font-normal text-slate-400">V</span>
-            </p>
-          </div>
+          <p className="mt-1 font-mono text-xl sm:text-2xl font-bold tracking-tight text-[var(--text-primary)]">
+            {reading.sensor_confidence}
+            <span className="ml-0.5 text-xs sm:text-sm font-sans font-semibold text-[var(--text-muted)]">
+              %
+            </span>
+          </p>
         </div>
       </div>
 
+      {/* Piezo-Electric Acoustic Channel — preserve all existing fields */}
+      <div className="mt-4 border-t border-[var(--border)] pt-3 min-w-0">
+        <div className="mb-2 flex items-center justify-between">
+          <p className="text-[0.65rem] font-bold uppercase tracking-wider text-[var(--brand-teal)]">
+            Piezo-Electric Acoustic
+          </p>
+          <span className="font-mono text-[0.6rem] text-[var(--text-muted)]">
+            ADS1115 A0
+          </span>
+        </div>
+        <div className="grid grid-cols-3 gap-1 sm:gap-1.5 min-w-0">
+          {[
+            {
+              label: "Peak",
+              value: reading.piezo_peak,
+            },
+            {
+              label: "RMS",
+              value: reading.piezo_rms,
+            },
+            {
+              label: "Pk-Pk",
+              value: reading.piezo_peak_to_peak,
+            },
+          ].map((ch) => (
+            <div
+              key={ch.label}
+              className="rounded border border-[var(--border)] bg-[var(--surface-alt)] px-1.5 py-1.5 sm:px-2 min-w-0 text-center"
+            >
+              <p className="text-[0.58rem] font-semibold uppercase text-[var(--text-muted)] truncate">
+                {ch.label}
+              </p>
+              <p className="mt-0.5 font-mono text-[0.72rem] sm:text-[0.8125rem] font-bold text-[var(--text-primary)] truncate tabular-nums">
+                {ch.value != null ? ch.value.toFixed(4) : "—"}
+                {ch.value != null && (
+                  <span className="ml-0.5 text-[0.6rem] font-normal text-[var(--text-muted)]">
+                    V
+                  </span>
+                )}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Unmapped warnings */}
       {unmappedWarnings.length > 0 && (
-        <ul className="mt-5 list-disc space-y-1 pl-5 text-sm font-medium text-status-critical">
+        <ul className="mt-3 list-disc space-y-1 pl-5 text-xs font-semibold text-[var(--status-danger)] min-w-0">
           {sortWarnings(unmappedWarnings).map((warning) => (
-            <li key={warning}>{warning}</li>
+            <li key={warning} className="break-words">{warning}</li>
           ))}
         </ul>
       )}

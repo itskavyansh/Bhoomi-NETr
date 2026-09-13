@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { Breadcrumb } from "../components/Breadcrumb";
 import { DataStatus } from "../components/DataStatus";
 import { LiveIndicator } from "../components/LiveIndicator";
 import { MetricTile } from "../components/MetricTile";
@@ -65,7 +66,7 @@ function appendHistoryPoint(
 function renderHealthBadge(status: string) {
   if (status === "GOOD") {
     return (
-      <span className="inline-flex items-center gap-1 rounded bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-400 border border-emerald-500/20">
+      <span className="inline-flex items-center gap-1 rounded bg-[var(--status-success-bg)] px-2 py-0.5 text-xs font-semibold text-[var(--status-success)] border border-[var(--status-success)]/30">
         <CheckCircle className="h-3.5 w-3.5" />
         GOOD
       </span>
@@ -73,14 +74,14 @@ function renderHealthBadge(status: string) {
   }
   if (status === "UNSTABLE" || status === "DEGRADED") {
     return (
-      <span className="inline-flex items-center gap-1 rounded bg-amber-500/10 px-2 py-0.5 text-xs font-semibold text-amber-400 border border-amber-500/20">
+      <span className="inline-flex items-center gap-1 rounded bg-[var(--status-warning-bg)] px-2 py-0.5 text-xs font-semibold text-[var(--status-warning)] border border-[var(--status-warning)]/30">
         <AlertTriangle className="h-3.5 w-3.5" />
         {status}
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 rounded bg-rose-500/10 px-2 py-0.5 text-xs font-semibold text-rose-400 border border-rose-500/20">
+    <span className="inline-flex items-center gap-1 rounded bg-[var(--status-danger-bg)] px-2 py-0.5 text-xs font-semibold text-[var(--status-danger)] border border-[var(--status-danger)]/30">
       <XCircle className="h-3.5 w-3.5" />
       {status}
     </span>
@@ -92,7 +93,7 @@ function renderInterpretationBadge(
 ) {
   if (interpretation === "NORMAL") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold tracking-wider text-emerald-400 border border-emerald-500/30">
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--status-success-bg)] px-3 py-1 text-xs font-bold tracking-wider text-[var(--status-success)] border border-[var(--status-success)]/30">
         <CheckCircle className="h-3.5 w-3.5" />
         NORMAL
       </span>
@@ -100,7 +101,7 @@ function renderInterpretationBadge(
   }
   if (interpretation === "STRUCTURAL VIBRATION") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1 text-xs font-bold tracking-wider text-amber-400 border border-amber-500/30">
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--status-warning-bg)] px-3 py-1 text-xs font-bold tracking-wider text-[var(--status-warning)] border border-[var(--status-warning)]/30">
         <AlertTriangle className="h-3.5 w-3.5" />
         STRUCTURAL VIBRATION
       </span>
@@ -108,30 +109,30 @@ function renderInterpretationBadge(
   }
   if (interpretation === "POSSIBLE CRACK INITIATION") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-500/15 px-3 py-1 text-xs font-bold tracking-wider text-purple-300 border border-purple-500/40 shadow-[0_0_12px_rgba(168,85,247,0.25)]">
-        <Activity className="h-3.5 w-3.5 text-purple-400" />
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--surface-alt)] px-3 py-1 text-xs font-bold tracking-wider text-[var(--accent-saffron)] border border-[var(--accent-saffron)]/30">
+        <Activity className="h-3.5 w-3.5" />
         POSSIBLE CRACK INITIATION
       </span>
     );
   }
   if (interpretation === "CRITICAL STRUCTURAL EVENT") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/20 px-3.5 py-1 text-xs font-bold tracking-wider text-rose-300 border border-rose-500/50 animate-pulse shadow-[0_0_16px_rgba(244,63,94,0.35)]">
-        <ShieldAlert className="h-3.5 w-3.5 text-rose-400" />
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--status-danger-bg)] px-3.5 py-1 text-xs font-bold tracking-wider text-[var(--status-danger)] border border-[var(--status-danger)]/30 animate-pulse">
+        <ShieldAlert className="h-3.5 w-3.5" />
         CRITICAL STRUCTURAL EVENT
       </span>
     );
   }
   if (interpretation === "CALIBRATING") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-500/10 px-3 py-1 text-xs font-bold tracking-wider text-teal-400 border border-teal-500/30">
-        <Radio className="h-3.5 w-3.5 animate-pulse text-teal-400" />
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-teal-light)] px-3 py-1 text-xs font-bold tracking-wider text-[var(--brand-teal)] border border-[var(--brand-teal)]/30">
+        <Radio className="h-3.5 w-3.5 animate-pulse" />
         CALIBRATING BASELINE
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-400 border border-slate-700">
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--surface-muted)] px-3 py-1 text-xs font-medium text-[var(--text-muted)] border border-[var(--border)]">
       NO PIEZO DATA
     </span>
   );
@@ -146,8 +147,8 @@ function renderIndexLevelBadge(
       <span
         className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-bold ${
           isHighCritical
-            ? "bg-rose-500/15 text-rose-400 border border-rose-500/30"
-            : "bg-amber-500/15 text-amber-400 border border-amber-500/30"
+            ? "bg-[var(--status-danger-bg)] text-[var(--status-danger)] border border-[var(--status-danger)]/30"
+            : "bg-[var(--status-warning-bg)] text-[var(--status-warning)] border border-[var(--status-warning)]/30"
         }`}
       >
         HIGH
@@ -156,14 +157,21 @@ function renderIndexLevelBadge(
   }
   if (level === "LOW") {
     return (
-      <span className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+      <span className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-bold bg-[var(--status-success-bg)] text-[var(--status-success)] border border-[var(--status-success)]/30">
         LOW
       </span>
     );
   }
+  if (level === "CALIBRATING") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-bold bg-[var(--brand-teal-light)] text-[var(--brand-teal)] border border-[var(--brand-teal)]/30">
+        CALIBRATING
+      </span>
+    );
+  }
   return (
-    <span className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium bg-slate-800 text-slate-400 border border-slate-700">
-      {level === "CALIBRATING" ? "CALIBRATING" : "NO DATA"}
+    <span className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium bg-[var(--surface-muted)] text-[var(--text-muted)] border border-[var(--border)]">
+      NO DATA
     </span>
   );
 }
@@ -268,11 +276,18 @@ export function NodeDetail() {
   }, [nodeId]);
 
   return (
-    <main className="dashboard-shell py-10 lg:py-12">
-      <div className="flex items-center justify-between">
+    <main id="main-content" className="dashboard-shell py-10 lg:py-12" tabIndex={-1} style={{ outline: "none" }}>
+      <Breadcrumb
+        items={[
+          { label: "Monitoring", to: "/dashboard" },
+          { label: "Live Dashboard", to: "/dashboard" },
+          { label: `Node ${nodeId ?? ""}` },
+        ]}
+      />
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
           to="/dashboard"
-          className="inline-flex items-center gap-2 text-sm font-medium text-teal-500 hover:text-teal-400"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--brand-teal)] hover:text-[var(--brand-green)]"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           Back to Dashboard
@@ -280,7 +295,7 @@ export function NodeDetail() {
         {reading && (
           <Link
             to={`/trend-analysis?node=${reading.node_id}`}
-            className="inline-flex items-center gap-2 rounded-lg border border-teal-800/80 bg-teal-950/50 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-teal-400 transition hover:bg-teal-900/50 hover:text-teal-300"
+            className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--brand-green)] shadow-xs transition hover:bg-[var(--surface-alt)] hover:border-[var(--brand-teal)]"
           >
             Trend Analysis & Prediction →
           </Link>
@@ -295,8 +310,8 @@ export function NodeDetail() {
 
       {!loading && !error && !reading && (
         <>
-          <h1 className="mt-8 text-2xl font-bold text-slate-100">Node not found</h1>
-          <p className="mt-2 text-sm font-medium text-slate-400">
+          <h1 className="mt-8 text-2xl font-bold text-[var(--text-primary)]">Node not found</h1>
+          <p className="mt-2 text-sm font-medium text-[var(--text-secondary)]">
             No sensor node matches the id {nodeId ?? "unknown"}.
           </p>
         </>
@@ -310,9 +325,9 @@ export function NodeDetail() {
               <div>
                 <p className="eyebrow mb-2">Node telemetry profile</p>
                 <h1 className="page-title">
-                  NODE {reading.node_id}
+                  {reading.node_id}
                 </h1>
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="mt-1 text-xs text-[var(--text-muted)]">
                   Last updated: {new Date(reading.timestamp).toLocaleTimeString()} · {reading.timestamp}
                 </p>
               </div>
@@ -324,14 +339,14 @@ export function NodeDetail() {
 
             {/* Low Confidence Advisory Banner (if applicable) */}
             {reading.confidence_warning && (
-              <div className="mb-6 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-amber-300">
+              <div className="mb-6 rounded-lg border border-[var(--alert-warning-border)] bg-[var(--alert-warning-bg)] p-4 text-[var(--alert-warning-text)] shadow-xs">
                 <div className="flex items-start gap-3">
-                  <ShieldAlert className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-400" />
+                  <ShieldAlert className="mt-0.5 h-5 w-5 flex-shrink-0 text-[var(--status-warning)]" />
                   <div className="text-sm">
-                    <p className="font-bold text-amber-200">
+                    <p className="font-bold text-[var(--status-warning)]">
                       ⚠ LOW SENSOR CONFIDENCE ({reading.sensor_confidence}%)
                     </p>
-                    <p className="mt-0.5 text-amber-300/90 text-xs">
+                    <p className="mt-0.5 text-xs text-[var(--alert-warning-text)]">
                       {reading.confidence_warning}. Note: The calculated risk evaluation should be verified against physical sensor connectivity.
                     </p>
                   </div>
@@ -341,12 +356,12 @@ export function NodeDetail() {
 
             {/* REQUIREMENT 4: SEPARATE REAL-TIME SENSOR TELEMETRY SECTION */}
             <section className="mb-12">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-bold tracking-tight text-slate-100 flex items-center gap-2">
-                  <Radio className="h-5 w-5 text-teal-400" />
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-xl font-bold tracking-tight text-[var(--text-primary)] flex items-center gap-2">
+                  <Radio className="h-5 w-5 text-[var(--brand-teal)]" />
                   Real-Time Sensor Telemetry
                 </h2>
-                <span className="text-xs text-slate-400">Live hardware channels</span>
+                <span className="text-xs text-[var(--text-muted)]">Live hardware channels</span>
               </div>
 
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
@@ -387,15 +402,15 @@ export function NodeDetail() {
               </div>
 
               {/* Dedicated Piezo Electric Telemetry Block */}
-              <div className="mt-6 rounded-xl border border-teal-500/30 bg-slate-900/60 p-5 shadow-lg shadow-black/20">
+              <div className="mt-6 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-5 shadow-xs">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <Zap className="h-5 w-5 text-teal-400" />
-                    <h3 className="text-sm font-bold tracking-wider text-slate-100 uppercase">
+                    <Zap className="h-5 w-5 text-[var(--brand-teal)]" />
+                    <h3 className="text-sm font-bold tracking-wider text-[var(--text-primary)] uppercase">
                       PIEZO ELECTRIC
                     </h3>
                   </div>
-                  <span className="rounded bg-teal-500/10 px-2 py-0.5 text-[10px] font-mono font-medium text-teal-300 border border-teal-500/20">
+                  <span className="rounded bg-[var(--brand-teal-light)] px-2 py-0.5 text-[10px] font-mono font-medium text-[var(--brand-teal)] border border-[var(--brand-teal)]/30">
                     ADS1115 · Channel A0
                   </span>
                 </div>
@@ -445,7 +460,7 @@ export function NodeDetail() {
 
             {/* REQUIREMENT 4: SEPARATE HISTORICAL TRENDS SECTION */}
             <section className="mt-8">
-              <h2 className="mb-6 text-xl font-bold tracking-tight text-slate-100 text-left">
+              <h2 className="mb-6 text-xl font-bold tracking-tight text-[var(--text-primary)] text-left">
                 Historical Trends
               </h2>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -454,76 +469,76 @@ export function NodeDetail() {
                   dataKey="tilt_x"
                   label="Tilt X"
                   unit="°"
-                  color="#2563eb"
+                  color="var(--chart-series-3)"
                 />
                 <TrendChart
                   data={history}
                   dataKey="tilt_y"
                   label="Tilt Y"
                   unit="°"
-                  color="#7c3aed"
+                  color="var(--chart-series-5)"
                 />
                 <TrendChart
                   data={history}
                   dataKey="vibration"
                   label="Vibration"
                   unit="g"
-                  color="#d97706"
+                  color="var(--chart-series-4)"
                 />
                 <TrendChart
                   data={history}
                   dataKey="distance"
                   label="Distance"
                   unit="cm"
-                  color="#0d9488"
+                  color="var(--chart-series-1)"
                 />
                 <TrendChart
                   data={history}
                   dataKey="displacement"
                   label="Displacement"
                   unit="cm"
-                  color="#e11d48"
+                  color="var(--chart-series-2)"
                 />
                 <TrendChart
                   data={history}
                   dataKey="piezo_peak"
                   label="Piezo Peak Voltage"
                   unit="V"
-                  color="#ec4899"
+                  color="var(--chart-series-1)"
                 />
                 <TrendChart
                   data={history}
                   dataKey="piezo_rms"
                   label="Piezo RMS Voltage"
                   unit="V"
-                  color="#8b5cf6"
+                  color="var(--chart-series-5)"
                 />
                 <TrendChart
                   data={history}
                   dataKey="piezo_peak_to_peak"
                   label="Piezo Peak-to-Peak Voltage"
                   unit="V"
-                  color="#06b6d4"
+                  color="var(--chart-series-3)"
                 />
               </div>
             </section>
 
             {/* REQUIREMENT: DERIVED DETECTION — VIBRATION & CRACK INDICES */}
-            <section className="mt-8 rounded-2xl border border-teal-500/30 bg-gradient-to-br from-slate-900/95 via-slate-900/70 to-teal-950/20 p-6 shadow-xl shadow-black/40">
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
+            <section className="mt-8 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-6 shadow-xs">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] pb-4">
                 <div>
                   <div className="flex items-center gap-2">
-                    <Zap className="h-5 w-5 text-teal-400" />
-                    <h2 className="text-lg font-bold tracking-tight text-slate-100">
+                    <Zap className="h-5 w-5 text-[var(--brand-teal)]" />
+                    <h2 className="text-lg font-bold tracking-tight text-[var(--text-primary)]">
                       Derived Detection: Vibration & Crack Indices
                     </h2>
                   </div>
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">
                     High-frequency acoustic shockwave vs macro structural resonance interpretation
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="rounded bg-teal-500/10 px-2 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-teal-400 border border-teal-500/30">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded bg-[var(--brand-teal-light)] px-2 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-[var(--brand-teal)] border border-[var(--brand-teal)]/30">
                     DERIVED LAYER · NOT RAW TELEMETRY
                   </span>
                   {detection && renderInterpretationBadge(detection.interpretation)}
@@ -533,53 +548,53 @@ export function NodeDetail() {
               {/* Sub-grid: Vibration Index & Crack Index Tiles */}
               <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
                 {/* Vibration Index Tile */}
-                <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
+                <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-alt)] p-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
                       Macro Vibration Index
                     </span>
                     {detection && renderIndexLevelBadge(detection.vibrationLevel)}
                   </div>
                   <div className="mt-2 flex items-baseline gap-2">
-                    <span className="text-3xl font-mono font-bold text-white">
+                    <span className="text-3xl font-mono font-bold text-[var(--text-primary)]">
                       {reading.vibration.toFixed(3)}
                     </span>
-                    <span className="text-xs font-semibold text-slate-400">g</span>
+                    <span className="text-xs font-semibold text-[var(--text-muted)]">g</span>
                   </div>
-                  <p className="mt-2 text-xs text-slate-400 leading-relaxed">
+                  <p className="mt-2 text-xs text-[var(--text-secondary)] leading-relaxed">
                     Evaluates bulk kinematic ground oscillations. Threshold:{" "}
-                    <span className="font-mono text-slate-300">1.00g</span>.
+                    <span className="font-mono text-[var(--text-primary)] font-semibold">1.00g</span>.
                   </p>
                 </div>
 
                 {/* Crack Index Tile */}
-                <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
+                <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-alt)] p-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
                       High-Freq Crack Index
                     </span>
                     {detection && renderIndexLevelBadge(detection.crackLevel, true)}
                   </div>
                   <div className="mt-2 flex items-baseline gap-2">
-                    <span className="text-3xl font-mono font-bold text-white">
+                    <span className="text-3xl font-mono font-bold text-[var(--text-primary)]">
                       {detection?.crackIndexValue !== null ? `${detection?.crackIndexValue.toFixed(2)}×` : "—"}
                     </span>
-                    <span className="text-xs font-semibold text-slate-400">baseline</span>
+                    <span className="text-xs font-semibold text-[var(--text-muted)]">baseline</span>
                   </div>
-                  <p className="mt-2 text-xs text-slate-400 leading-relaxed">
+                  <p className="mt-2 text-xs text-[var(--text-secondary)] leading-relaxed">
                     Composite acoustic emission:{" "}
-                    <span className="font-mono text-slate-300">
+                    <span className="font-mono text-[var(--text-primary)] font-semibold">
                       0.45·Peak ({detection?.peakRatio ?? "—"}×) + 0.30·P-P ({detection?.ppRatio ?? "—"}×) + 0.25·RMS ({detection?.rmsRatio ?? "—"}×)
                     </span>
-                    . Threshold: <span className="font-mono text-slate-300">1.50×</span>.
+                    . Threshold: <span className="font-mono text-[var(--text-primary)] font-semibold">1.50×</span>.
                   </p>
                 </div>
               </div>
 
               {/* Status explanation & persistence filter context */}
-              <div className="mt-4 rounded-xl bg-slate-950/60 p-3.5 border border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs">
-                <div className="flex items-center gap-2 text-slate-300">
-                  <Info className="h-4 w-4 text-teal-400 flex-shrink-0" />
+              <div className="mt-4 rounded-lg bg-[var(--surface-alt)] p-3.5 border border-[var(--border)] flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+                  <Info className="h-4 w-4 text-[var(--brand-teal)] flex-shrink-0" />
                   <span>
                     {detection?.interpretation === "NORMAL" && "Geological baseline stable. No micro-fracture acoustic bursts or bulk ground resonance detected."}
                     {detection?.interpretation === "STRUCTURAL VIBRATION" && "High bulk vibration detected without high-frequency piezo bursts (mechanical resonance/machinery, not active rock fracture)."}
@@ -589,7 +604,7 @@ export function NodeDetail() {
                     {detection?.interpretation === "NO_DATA" && "No piezo sensor telemetry available on this node."}
                   </span>
                 </div>
-                <div className="text-right text-[11px] font-mono text-slate-500">
+                <div className="text-right text-[11px] font-mono text-[var(--text-muted)]">
                   {detection?.baselineStatus === "ESTABLISHED"
                     ? `Baseline: Peak ${detection.baseline?.baseline_peak.toFixed(4)}V · RMS ${detection.baseline?.baseline_rms.toFixed(4)}V`
                     : "Calibration in progress"}
@@ -600,29 +615,29 @@ export function NodeDetail() {
           </div>
 
           <aside className="min-w-0 space-y-6 lg:sticky lg:top-24">
-            <div className="hidden border-b border-surface-border/80 pb-3 lg:block">
+            <div className="hidden border-b border-[var(--border)] pb-3 lg:block">
               <p className="eyebrow">Risk & reliability</p>
-              <p className="mt-1 text-xs text-slate-500">Decision context for {reading.node_id}</p>
+              <p className="mt-1 text-xs text-[var(--text-muted)]">Decision context for {reading.node_id}</p>
             </div>
             {/* SECTION 1 & 2: SEPARATE DEDICATED INTELLIGENCE SECTIONS */}
             <div className="mb-0 grid grid-cols-1 gap-6">
               {/* REQUIREMENT 1: Separate Subsidence Risk Index Card */}
-              <section className="rounded-2xl border border-surface-border bg-surface-card p-6 shadow-xl shadow-black/40 flex flex-col justify-between">
+              <section className="rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-6 shadow-xs flex flex-col justify-between">
                 <div>
-                  <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
-                    <h2 className="text-base font-bold text-slate-100 flex items-center gap-2">
-                      <TrendingUp className="h-5 w-5 text-teal-400" />
+                  <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
+                    <h2 className="text-base font-bold text-[var(--text-primary)] flex items-center gap-2">
+                      <TrendingUp className="h-5 w-5 text-[var(--brand-teal)]" />
                       Subsidence Risk Index
                     </h2>
                     <span
                       className={`rounded-full px-3 py-1 text-xs font-bold tracking-wider border ${
                         reading.risk_level === "CRITICAL"
-                          ? "bg-rose-500/10 text-rose-400 border-rose-500/30"
+                          ? "bg-[var(--status-danger-bg)] text-[var(--status-danger)] border-[var(--status-danger)]/30"
                           : reading.risk_level === "HIGH"
-                          ? "bg-orange-500/10 text-orange-400 border-orange-500/30"
+                          ? "bg-[var(--accent-saffron-light)] text-[var(--accent-saffron)] border-[var(--accent-saffron)]/30"
                           : reading.risk_level === "MODERATE"
-                          ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
-                          : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                          ? "bg-[var(--status-warning-bg)] text-[var(--status-warning)] border-[var(--status-warning)]/30"
+                          : "bg-[var(--status-success-bg)] text-[var(--status-success)] border-[var(--status-success)]/30"
                       }`}
                     >
                       {reading.risk_level} RISK
@@ -633,59 +648,59 @@ export function NodeDetail() {
                   <div className="mt-5 flex items-baseline justify-between">
                     <div>
                       <div className="flex items-baseline gap-2">
-                        <span className="text-5xl font-mono font-bold text-white">
+                        <span className="text-5xl font-mono font-bold text-[var(--text-primary)]">
                           {reading.risk_score}
                         </span>
-                        <span className="text-sm font-semibold text-slate-400">/ 100</span>
+                        <span className="text-sm font-semibold text-[var(--text-muted)]">/ 100</span>
                       </div>
-                      <p className="mt-1 text-xs text-slate-400">
+                      <p className="mt-1 text-xs text-[var(--text-secondary)]">
                         Multi-sensor deterministic subsidence score
                       </p>
                     </div>
 
                     <div className="text-right">
-                      <span className="text-xs font-semibold text-slate-400">Confidence:</span>
-                      <p className="font-mono text-sm font-bold text-slate-200">
+                      <span className="text-xs font-semibold text-[var(--text-muted)]">Confidence:</span>
+                      <p className="font-mono text-sm font-bold text-[var(--text-primary)]">
                         {reading.sensor_confidence}%
                       </p>
                     </div>
                   </div>
 
                   {/* Visual Progress / Risk Bar */}
-                  <div className="mt-4 h-2.5 w-full rounded-full bg-slate-800/90 overflow-hidden">
+                  <div className="mt-4 h-2.5 w-full rounded-full bg-[var(--surface-muted)] border border-[var(--border)] overflow-hidden">
                     <div
                       className={`h-full transition-all duration-500 ${
                         reading.risk_score >= 75
-                          ? "bg-rose-500"
+                          ? "bg-[var(--status-danger)]"
                           : reading.risk_score >= 50
-                          ? "bg-orange-500"
+                          ? "bg-[var(--accent-saffron)]"
                           : reading.risk_score >= 25
-                          ? "bg-amber-500"
-                          : "bg-emerald-500"
+                          ? "bg-[var(--status-warning)]"
+                          : "bg-[var(--status-success)]"
                       }`}
                       style={{ width: `${Math.min(100, Math.max(5, reading.risk_score))}%` }}
                     />
                   </div>
 
                   {/* Explanation Summary */}
-                  <div className="mt-5 rounded-xl bg-slate-900/60 p-3.5 border border-slate-800/80">
-                    <p className="text-xs text-slate-300 leading-relaxed">
+                  <div className="mt-5 rounded-lg bg-[var(--surface-alt)] p-3.5 border border-[var(--border)]">
+                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                       {getRiskExplanation(reading)}
                     </p>
                   </div>
 
                   {/* Contributing Factors */}
                   <div className="mt-5">
-                    <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">
                       Contributing Factors & Trends:
                     </p>
                     <ul className="mt-2.5 space-y-2 text-xs">
                       {reading.risk_factors.map((factor, idx) => (
                         <li
                           key={idx}
-                          className="flex items-start gap-2 rounded-lg bg-slate-800/40 px-3 py-2 text-slate-200 border border-slate-700/40"
+                          className="flex items-start gap-2 rounded-lg bg-[var(--surface-alt)] px-3 py-2 text-[var(--text-primary)] border border-[var(--border)]"
                         >
-                          <Activity className="h-4 w-4 text-teal-400 flex-shrink-0 mt-0.5" />
+                          <Activity className="h-4 w-4 text-[var(--brand-teal)] flex-shrink-0 mt-0.5" />
                           <span>{factor}</span>
                         </li>
                       ))}
@@ -693,27 +708,27 @@ export function NodeDetail() {
                   </div>
                 </div>
 
-                <div className="mt-6 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
+                <div className="mt-6 pt-3 border-t border-[var(--border)] flex items-center justify-between text-xs text-[var(--text-muted)]">
                   <span>Evaluation: Deterministic Correlation Engine</span>
-                  <span className="font-mono">{reading.status}</span>
+                  <span className="font-mono font-semibold text-[var(--text-primary)]">{reading.status}</span>
                 </div>
               </section>
 
               {/* REQUIREMENT 2: Separate Sensor Health & Confidence Card */}
-              <section className="rounded-2xl border border-surface-border bg-surface-card p-6 shadow-xl shadow-black/40 flex flex-col justify-between">
+              <section className="rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-6 shadow-xs flex flex-col justify-between">
                 <div>
-                  <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
-                    <h2 className="text-base font-bold text-slate-100 flex items-center gap-2">
-                      <ShieldCheck className="h-5 w-5 text-teal-400" />
+                  <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
+                    <h2 className="text-base font-bold text-[var(--text-primary)] flex items-center gap-2">
+                      <ShieldCheck className="h-5 w-5 text-[var(--brand-teal)]" />
                       Sensor Health & Confidence
                     </h2>
                     <span
                       className={`rounded-full px-3 py-1 text-xs font-bold tracking-wider border ${
                         reading.sensor_confidence >= 85
-                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                          ? "bg-[var(--status-success-bg)] text-[var(--status-success)] border-[var(--status-success)]/30"
                           : reading.sensor_confidence >= 60
-                          ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
-                          : "bg-rose-500/10 text-rose-400 border-rose-500/30"
+                          ? "bg-[var(--status-warning-bg)] text-[var(--status-warning)] border-[var(--status-warning)]/30"
+                          : "bg-[var(--status-danger-bg)] text-[var(--status-danger)] border-[var(--status-danger)]/30"
                       }`}
                     >
                       {reading.sensor_confidence >= 85
@@ -728,68 +743,68 @@ export function NodeDetail() {
                   <div className="mt-5 flex items-baseline justify-between">
                     <div>
                       <div className="flex items-baseline gap-2">
-                        <span className="text-5xl font-mono font-bold text-white">
+                        <span className="text-5xl font-mono font-bold text-[var(--text-primary)]">
                           {reading.sensor_confidence}%
                         </span>
                       </div>
-                      <p className="mt-1 text-xs text-slate-400">
+                      <p className="mt-1 text-xs text-[var(--text-secondary)]">
                         Data reliability & transducer plausibility score
                       </p>
                     </div>
 
                     <div className="text-right">
-                      <span className="text-xs font-semibold text-slate-400">Data Stream:</span>
-                      <p className="font-mono text-sm font-bold text-slate-200">
+                      <span className="text-xs font-semibold text-[var(--text-muted)]">Data Stream:</span>
+                      <p className="font-mono text-sm font-bold text-[var(--text-primary)]">
                         {reading.sensor_health.data_quality}
                       </p>
                     </div>
                   </div>
 
                   {/* Visual Confidence Bar */}
-                  <div className="mt-4 h-2.5 w-full rounded-full bg-slate-800/90 overflow-hidden">
+                  <div className="mt-4 h-2.5 w-full rounded-full bg-[var(--surface-muted)] border border-[var(--border)] overflow-hidden">
                     <div
                       className={`h-full transition-all duration-500 ${
                         reading.sensor_confidence >= 85
-                          ? "bg-emerald-500"
+                          ? "bg-[var(--status-success)]"
                           : reading.sensor_confidence >= 60
-                          ? "bg-amber-500"
-                          : "bg-rose-500"
+                          ? "bg-[var(--status-warning)]"
+                          : "bg-[var(--status-danger)]"
                       }`}
                       style={{ width: `${Math.min(100, Math.max(5, reading.sensor_confidence))}%` }}
                     />
                   </div>
 
                   {/* Trustworthiness Summary */}
-                  <div className="mt-5 rounded-xl bg-slate-900/60 p-3.5 border border-slate-800/80">
-                    <p className="text-xs text-slate-300 leading-relaxed">
+                  <div className="mt-5 rounded-lg bg-[var(--surface-alt)] p-3.5 border border-[var(--border)]">
+                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                       {getConfidenceSummary(reading)}
                     </p>
                   </div>
 
                   {/* Channel Status Breakdown */}
                   <div className="mt-5">
-                    <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">
                       Channel Health Status:
                     </p>
                     <div className="mt-2.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                      <div className="flex items-center justify-between rounded-lg bg-slate-800/40 px-3 py-2 border border-slate-700/40">
-                        <span className="text-xs text-slate-300 font-medium">MPU6050 (Tilt & Gyro)</span>
+                      <div className="flex items-center justify-between rounded-lg bg-[var(--surface-alt)] px-3 py-2 border border-[var(--border)]">
+                        <span className="text-xs text-[var(--text-primary)] font-medium">MPU6050 (Tilt & Gyro)</span>
                         {renderHealthBadge(reading.sensor_health.mpu6050)}
                       </div>
-                      <div className="flex items-center justify-between rounded-lg bg-slate-800/40 px-3 py-2 border border-slate-700/40">
-                        <span className="text-xs text-slate-300 font-medium">HC-SR04 (Distance)</span>
+                      <div className="flex items-center justify-between rounded-lg bg-[var(--surface-alt)] px-3 py-2 border border-[var(--border)]">
+                        <span className="text-xs text-[var(--text-primary)] font-medium">HC-SR04 (Distance)</span>
                         {renderHealthBadge(reading.sensor_health.hcsr04)}
                       </div>
-                      <div className="flex items-center justify-between rounded-lg bg-slate-800/40 px-3 py-2 border border-slate-700/40">
-                        <span className="text-xs text-slate-300 font-medium">ADS1115 (Piezo/ADC)</span>
+                      <div className="flex items-center justify-between rounded-lg bg-[var(--surface-alt)] px-3 py-2 border border-[var(--border)]">
+                        <span className="text-xs text-[var(--text-primary)] font-medium">ADS1115 (Piezo/ADC)</span>
                         {renderHealthBadge(reading.sensor_health.ads1115)}
                       </div>
-                      <div className="flex items-center justify-between rounded-lg bg-slate-800/40 px-3 py-2 border border-slate-700/40">
-                        <span className="text-xs text-slate-300 font-medium">Connectivity</span>
+                      <div className="flex items-center justify-between rounded-lg bg-[var(--surface-alt)] px-3 py-2 border border-[var(--border)]">
+                        <span className="text-xs text-[var(--text-primary)] font-medium">Connectivity</span>
                         {renderHealthBadge(reading.sensor_health.connectivity)}
                       </div>
-                      <div className="flex items-center justify-between rounded-lg bg-slate-800/40 px-3 py-2 border border-slate-700/40">
-                        <span className="text-xs text-slate-300 font-medium">Data Quality</span>
+                      <div className="flex items-center justify-between rounded-lg bg-[var(--surface-alt)] px-3 py-2 border border-[var(--border)]">
+                        <span className="text-xs text-[var(--text-primary)] font-medium">Data Quality</span>
                         {renderHealthBadge(reading.sensor_health.data_quality)}
                       </div>
                     </div>
@@ -797,9 +812,9 @@ export function NodeDetail() {
                 </div>
 
                 {reading.sensor_health.issues && reading.sensor_health.issues.length > 0 && (
-                  <div className="mt-4 rounded-lg bg-amber-500/10 p-2.5 border border-amber-500/20">
-                    <p className="text-[11px] text-amber-300 flex items-center gap-1.5">
-                      <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 text-amber-400" />
+                  <div className="mt-4 rounded-lg bg-[var(--alert-warning-bg)] p-2.5 border border-[var(--alert-warning-border)]">
+                    <p className="text-[11px] text-[var(--alert-warning-text)] flex items-center gap-1.5">
+                      <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 text-[var(--status-warning)]" />
                       <span>{reading.sensor_health.issues[0]}</span>
                     </p>
                   </div>

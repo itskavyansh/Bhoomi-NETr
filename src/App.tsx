@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Footer } from "./components/Footer";
 import { Navbar } from "./components/Navbar";
 import { NotificationPanel } from "./components/NotificationPanel";
 import { Alerts } from "./pages/Alerts";
@@ -12,17 +13,20 @@ import { TrendAnalysis } from "./pages/TrendAnalysis";
 export function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-surface-base text-slate-300">
+      <div className="min-h-screen bg-[var(--bg)] text-[var(--text-secondary)] flex flex-col transition-colors duration-200">
         <Navbar />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/structural-health" element={<StructuralHealth />} />
-          <Route path="/risk-score" element={<RiskScore />} />
-          <Route path="/node/:nodeId" element={<NodeDetail />} />
-          <Route path="/trend-analysis" element={<TrendAnalysis />} />
-          <Route path="/alerts" element={<Alerts />} />
-        </Routes>
+        <div className="flex-1">
+          <Routes>
+            <Route path="/"                   element={<Home />} />
+            <Route path="/dashboard"          element={<Dashboard />} />
+            <Route path="/structural-health"  element={<StructuralHealth />} />
+            <Route path="/risk-score"         element={<RiskScore />} />
+            <Route path="/node/:nodeId"       element={<NodeDetail />} />
+            <Route path="/trend-analysis"     element={<TrendAnalysis />} />
+            <Route path="/alerts"             element={<Alerts />} />
+          </Routes>
+        </div>
+        <Footer />
         <NotificationPanel />
       </div>
     </BrowserRouter>

@@ -1,19 +1,25 @@
 import { Bell } from "lucide-react";
 import { AlertHistoryPanel } from "../components/AlertHistoryPanel";
+import { Breadcrumb } from "../components/Breadcrumb";
 
 export function Alerts() {
   return (
-    <main className="dashboard-shell py-10 lg:py-12">
+    <main id="main-content" className="dashboard-shell py-10 lg:py-12" tabIndex={-1} style={{ outline: "none" }}>
+      <Breadcrumb items={[{ label: "Monitoring" }, { label: "Alert History" }]} />
+
       <header className="mb-8">
         <p className="eyebrow mb-2">Event stream</p>
         <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-300/20 bg-amber-300/10 text-amber-200">
+          <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--status-warning)]/30 bg-[var(--status-warning-bg)] text-[var(--status-warning)] shadow-xs">
             <Bell className="h-5 w-5" aria-hidden="true" />
           </span>
-          <h1 className="page-title">Alert history</h1>
+          <h1 className="page-title">Alert History</h1>
         </div>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400">Review status transitions and warning events across the monitored network.</p>
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
+          Review status transitions and warning events across the monitored network.
+        </p>
       </header>
+
       <div className="mx-auto max-w-5xl">
         <AlertHistoryPanel showFilters />
       </div>

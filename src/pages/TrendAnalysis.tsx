@@ -165,7 +165,7 @@ export function TrendAnalysis() {
           <div>
             <p className="eyebrow mb-2">Telemetry intelligence</p>
             <h1 className="page-title">Trend analysis & prediction</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400">Explore subsidence kinematics, progression signals, and early-warning projections for one monitoring node at a time.</p>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">Explore subsidence kinematics, progression signals, and early-warning projections for one monitoring node at a time.</p>
           </div>
           {!loading && !error && <LiveIndicator />}
         </div>
@@ -173,23 +173,23 @@ export function TrendAnalysis() {
         <div className="panel-surface flex flex-col gap-5 rounded-2xl p-4 sm:p-5 lg:flex-row lg:items-end lg:justify-between">
           <label className="block min-w-0 lg:w-56">
             <span className="eyebrow mb-2 block">Monitoring node</span>
-            <select value={selectedNode} onChange={(event) => handleSelectNode(event.target.value)} className="w-full rounded-lg border border-surface-border bg-surface-tile px-3 py-2.5 font-mono text-sm font-semibold text-slate-100 outline-none transition focus:border-teal-300/60">
+            <select value={selectedNode} onChange={(event) => handleSelectNode(event.target.value)} className="w-full rounded-lg border border-[var(--input-border)] bg-[var(--input-bg)] px-3 py-2.5 font-mono text-sm font-semibold text-[var(--input-text)] outline-none transition focus:border-[var(--brand-teal)]">
               {availableNodes.map((nodeId) => <option key={nodeId} value={nodeId}>{nodeId}</option>)}
             </select>
           </label>
 
           <div className="min-w-0 flex-1">
             <span className="eyebrow mb-2 block">Time window</span>
-            <div className="grid grid-cols-2 gap-1 rounded-lg border border-surface-border bg-surface-tile p-1 sm:grid-cols-5">
+            <div className="grid grid-cols-2 gap-1 rounded-lg border border-[var(--border)] bg-[var(--surface-alt)] p-1 sm:grid-cols-5">
               {TIME_RANGES.map((r) => {
                 const active = r.id === timeRange;
-                return <button key={r.id} onClick={() => setTimeRange(r.id)} className={`rounded-md px-2 py-2 text-xs font-semibold transition ${active ? "bg-teal-300/10 text-teal-200 shadow-sm" : "text-slate-400 hover:bg-white/[0.04] hover:text-slate-100"}`}>{r.label}</button>;
+                return <button key={r.id} onClick={() => setTimeRange(r.id)} className={`rounded-md px-2 py-2 text-xs font-semibold transition ${active ? "bg-[var(--brand-green)] text-white shadow-sm" : "text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"}`}>{r.label}</button>;
               })}
             </div>
           </div>
 
-          <button onClick={() => { setIsRefreshing(true); void loadHistory(selectedNode, timeRange); }} title="Refresh historical data" className="flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg border border-surface-border bg-surface-tile px-3 text-xs font-semibold text-slate-300 transition hover:border-teal-300/30 hover:text-teal-200 lg:w-10 lg:px-0">
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin text-teal-400" : ""}`} />
+          <button onClick={() => { setIsRefreshing(true); void loadHistory(selectedNode, timeRange); }} title="Refresh historical data" className="flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-alt)] px-3 text-xs font-semibold text-[var(--text-secondary)] transition hover:border-[var(--brand-teal)] hover:text-[var(--brand-teal)] lg:w-10 lg:px-0">
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin text-[var(--brand-teal)]" : ""}`} />
             <span className="lg:hidden">Refresh</span>
           </button>
         </div>
@@ -205,11 +205,11 @@ export function TrendAnalysis() {
           {/* Section 2: Summary Kinematics & Rate of Change Tiles */}
           <section>
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-bold tracking-tight text-slate-100 flex items-center gap-2">
-                <Activity className="h-5 w-5 text-teal-400" />
+              <h2 className="text-xl font-bold tracking-tight text-[var(--text-primary)] flex items-center gap-2">
+                <Activity className="h-5 w-5 text-[var(--brand-teal)]" />
                 Kinematics & Rate-of-Change Summary
               </h2>
-              <span className="font-mono text-xs text-slate-400">
+              <span className="font-mono text-xs text-[var(--text-muted)]">
                 {analysis.sampleCount} observations over {analysis.observationWindowSeconds}s window
               </span>
             </div>
@@ -350,10 +350,10 @@ export function TrendAnalysis() {
           {/* Section 3: Recharts Historical Trend Graphs with Threshold Lines */}
           <section>
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-bold tracking-tight text-slate-100 text-left">
+              <h2 className="text-xl font-bold tracking-tight text-[var(--text-primary)] text-left">
                 Multi-Sensor Historical Trends & Operating Envelopes
               </h2>
-              <span className="text-xs font-mono text-slate-400">
+              <span className="text-xs font-mono text-[var(--text-muted)]">
                 Orange = Warning Threshold • Red = Critical Threshold
               </span>
             </div>
@@ -366,7 +366,7 @@ export function TrendAnalysis() {
                 dataKey="displacement"
                 label="Displacement (cm)"
                 unit="cm"
-                color="#f43f5e"
+                color="var(--chart-series-1)"
               />
 
               {/* Graph 2: Tilt (X & Y) */}
@@ -375,7 +375,7 @@ export function TrendAnalysis() {
                 dataKey="tilt_x"
                 label="Tilt X Angle (°)"
                 unit="°"
-                color="#3b82f6"
+                color="var(--chart-series-3)"
               />
 
               {/* Graph 3: Vibration */}
@@ -384,7 +384,7 @@ export function TrendAnalysis() {
                 dataKey="vibration"
                 label="Vibration Magnitude (g)"
                 unit="g"
-                color="#f59e0b"
+                color="var(--chart-series-4)"
               />
 
               {/* Graph 4: Risk Score */}
@@ -393,7 +393,7 @@ export function TrendAnalysis() {
                 dataKey="risk_score"
                 label="Subsidence Risk Score (0-100)"
                 unit=""
-                color="#10b981"
+                color="var(--chart-series-2)"
               />
 
               {/* Graph 5: Piezo Peak */}
@@ -402,7 +402,7 @@ export function TrendAnalysis() {
                 dataKey="piezo_peak"
                 label="Piezo Peak Voltage (V)"
                 unit="V"
-                color="#ec4899"
+                color="var(--chart-series-1)"
               />
 
               {/* Graph 6: Piezo RMS */}
@@ -411,7 +411,7 @@ export function TrendAnalysis() {
                 dataKey="piezo_rms"
                 label="Piezo RMS Voltage (V)"
                 unit="V"
-                color="#8b5cf6"
+                color="var(--chart-series-5)"
               />
 
               {/* Graph 7: Piezo Peak-to-Peak */}
@@ -420,7 +420,7 @@ export function TrendAnalysis() {
                 dataKey="piezo_peak_to_peak"
                 label="Piezo Peak-to-Peak Voltage (V)"
                 unit="V"
-                color="#06b6d4"
+                color="var(--chart-series-3)"
               />
             </div>
           </section>

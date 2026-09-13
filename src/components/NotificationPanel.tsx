@@ -98,18 +98,18 @@ export function NotificationPanel() {
       {cappedCriticals.map(node => (
         <div 
           key={node.node_id} 
-          className="flex flex-col gap-2 rounded-xl border border-red-500/50 bg-surface-card p-4 shadow-lg shadow-black/40 animate-critical-border"
+          className="flex flex-col gap-2 rounded-xl border border-[var(--alert-critical-border)] border-l-4 border-l-[var(--alert-critical-accent)] bg-[var(--card-bg)] p-4 shadow-lg shadow-black/30"
         >
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h4 className="font-bold text-red-500">NODE {node.node_id} CRITICAL</h4>
-              <p className="text-xs text-slate-400 font-mono mt-1">
+              <h4 className="font-bold text-[var(--status-danger)]">NODE {node.node_id} CRITICAL</h4>
+              <p className="text-xs text-[var(--text-muted)] font-mono mt-1">
                 {new Date(node.timestamp).toLocaleTimeString()}
               </p>
             </div>
             <button 
               onClick={() => handleDismiss(node.node_id, node.timestamp)}
-              className="text-slate-400 hover:text-white transition-colors"
+              className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
               aria-label="Dismiss"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -117,10 +117,10 @@ export function NotificationPanel() {
               </svg>
             </button>
           </div>
-          <div className="text-sm text-slate-200">
+          <div className="text-sm text-[var(--text-secondary)]">
             {node.warnings.map(w => (
               <div key={w} className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                <span className="h-1.5 w-1.5 rounded-full bg-[var(--status-danger)]" />
                 {w.replace(/_/g, " ")}
               </div>
             ))}
@@ -128,8 +128,8 @@ export function NotificationPanel() {
         </div>
       ))}
       {hiddenCount > 0 && (
-        <div className="flex items-center justify-center rounded-xl border border-surface-border bg-surface-card p-3 shadow-lg shadow-black/40">
-          <span className="text-xs font-bold text-slate-400">
+        <div className="flex items-center justify-center rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] p-3 shadow-lg shadow-black/30">
+          <span className="text-xs font-bold text-[var(--text-muted)]">
             +{hiddenCount} more critical node{hiddenCount > 1 ? 's' : ''} active
           </span>
         </div>

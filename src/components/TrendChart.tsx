@@ -78,60 +78,63 @@ export function TrendChart({
   }
 
   return (
-    <div className="rounded-2xl border border-surface-border bg-surface-card/90 p-5 shadow-[0_16px_36px_rgba(0,0,0,0.16)]">
-      <div className="mb-4 flex items-center justify-between gap-3"><h3 className="text-sm font-bold tracking-tight text-slate-200">{label}</h3><span className="h-2 w-2 rounded-full" style={{ backgroundColor: color, boxShadow: `0 0 12px ${color}` }} /></div>
-      <div className="h-64">
+    <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-4 sm:p-5 shadow-xs min-w-0 transition-colors">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h3 className="text-sm font-bold tracking-tight text-[var(--text-primary)] truncate">{label}</h3>
+        <span className="h-2.5 w-2.5 rounded-full shrink-0 ring-2 ring-[var(--card-border)]" style={{ backgroundColor: color }} />
+      </div>
+      <div className="h-64 min-w-0">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 10, right: 12, left: 4, bottom: 0 }}>
+          <AreaChart data={data} margin={{ top: 10, right: 28, left: 4, bottom: 0 }}>
             <defs>
               <linearGradient id={`gradient-${dataKey}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={color} stopOpacity={0.3} />
-                <stop offset="95%" stopColor={color} stopOpacity={0} />
+                <stop offset="5%" stopColor={color} stopOpacity={0.25} />
+                <stop offset="95%" stopColor={color} stopOpacity={0.02} />
               </linearGradient>
             </defs>
-            <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
+            <CartesianGrid stroke="var(--chart-grid)" vertical={false} />
             <XAxis
               dataKey="timestamp"
               tickFormatter={formatClock}
-              tick={{ fontSize: 11, fill: "#94a3b8", fontFamily: '"JetBrains Mono", monospace' }}
-              tickLine={{ stroke: "#475569" }}
-              axisLine={{ stroke: "#475569" }}
-              minTickGap={24}
+              tick={{ fontSize: 11, fill: "var(--chart-labels)", fontFamily: '"JetBrains Mono", monospace' }}
+              tickLine={{ stroke: "var(--chart-axis)" }}
+              axisLine={{ stroke: "var(--chart-axis)" }}
+              minTickGap={32}
             />
             <YAxis
               domain={['auto', 'auto']}
-              tick={{ fontSize: 11, fill: "#94a3b8", fontFamily: '"JetBrains Mono", monospace' }}
-              tickLine={{ stroke: "#475569" }}
-              axisLine={{ stroke: "#475569" }}
+              tick={{ fontSize: 11, fill: "var(--chart-labels)", fontFamily: '"JetBrains Mono", monospace' }}
+              tickLine={{ stroke: "var(--chart-axis)" }}
+              axisLine={{ stroke: "var(--chart-axis)" }}
               label={{
                 value: unit,
                 angle: -90,
                 position: "insideLeft",
-                style: { fill: "#94a3b8", fontSize: 12, textAnchor: "middle" },
+                style: { fill: "var(--chart-labels)", fontSize: 11, textAnchor: "middle" },
               }}
             />
             {warnThreshold !== undefined && (
               <ReferenceLine 
                 y={warnThreshold} 
-                stroke="#f59e0b" 
+                stroke="var(--status-warning)" 
                 strokeDasharray="3 3" 
-                strokeOpacity={0.5}
-                label={{ position: 'insideTopLeft', value: `Warn (${warnThreshold})`, fill: '#f59e0b', fontSize: 10, fontFamily: '"JetBrains Mono", monospace' }}
+                strokeOpacity={0.8}
+                label={{ position: 'insideTopLeft', value: `Warn (${warnThreshold})`, fill: 'var(--status-warning)', fontSize: 10, fontFamily: '"JetBrains Mono", monospace' }}
               />
             )}
             {critThreshold !== undefined && (
               <ReferenceLine 
                 y={critThreshold} 
-                stroke="#ef4444" 
+                stroke="var(--status-danger)" 
                 strokeDasharray="3 3" 
-                strokeOpacity={0.5}
-                label={{ position: 'insideTopLeft', value: `Crit (${critThreshold})`, fill: '#ef4444', fontSize: 10, fontFamily: '"JetBrains Mono", monospace' }}
+                strokeOpacity={0.8}
+                label={{ position: 'insideTopLeft', value: `Crit (${critThreshold})`, fill: 'var(--status-danger)', fontSize: 10, fontFamily: '"JetBrains Mono", monospace' }}
               />
             )}
             <Tooltip
-              contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", color: "#f8fafc", borderRadius: "0.5rem" }}
-              itemStyle={{ color: "#f8fafc", fontFamily: '"JetBrains Mono", monospace', fontWeight: "bold" }}
-              labelStyle={{ color: "#94a3b8", marginBottom: "4px" }}
+              contentStyle={{ backgroundColor: "var(--chart-tooltip-bg)", borderColor: "var(--chart-tooltip-border)", color: "var(--chart-tooltip-text)", borderRadius: "0.375rem", boxShadow: "0 4px 14px rgba(0,0,0,0.2)" }}
+              itemStyle={{ color: "var(--chart-tooltip-text)", fontFamily: '"JetBrains Mono", monospace', fontWeight: "bold" }}
+              labelStyle={{ color: "var(--chart-labels)", marginBottom: "4px" }}
               labelFormatter={(value) => formatClock(String(value))}
               formatter={(value) => [formatTooltipValue(value, unit), label]}
             />
@@ -144,12 +147,12 @@ export function TrendChart({
               fill={`url(#gradient-${dataKey})`}
               dot={(props: { cx?: number; cy?: number; index?: number }) => {
                 const { cx, cy, index } = props;
-                if (index === data.length - 1) {
+                if (index === data.length - 1 && cx != null && cy != null) {
                   return <circle key="latest" cx={cx} cy={cy} r={4} fill={color} stroke="none" />;
                 }
-                return <span key={index} />;
+                return null;
               }}
-              activeDot={{ r: 6, fill: color, stroke: "#0f172a", strokeWidth: 2 }}
+              activeDot={{ r: 6, fill: color, stroke: "var(--card-bg)", strokeWidth: 2 }}
               isAnimationActive={false}
             />
           </AreaChart>

@@ -1,16 +1,35 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en" class="text-size-md">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MINE SUBSIDENCE MONITORING</title>
+    <title>BHOOMI-NETr — National Ground Stability Monitoring Network</title>
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem("bhoomi_theme");
+          if (saved === "dark" || (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+            document.documentElement.classList.add("dark");
+          } else {
+            document.documentElement.classList.remove("dark");
+          }
+        } catch(e) {}
+      })();
+    </script>
+    <meta name="description" content="BHOOMI-NETr is a real-time geospatial ground stability monitoring network. Multi-sensor detection of subsidence, vibration, and structural instability across deployed sensor nodes." />
+    <meta name="keywords" content="ground monitoring, subsidence detection, sensor network, geospatial, structural health, BHOOMI-NETr, piezo-electric, MPU6050" />
+    <meta name="theme-color" content="#0B5D3B" />
+    <!-- Open Graph -->
+    <meta property="og:title" content="BHOOMI-NETr — National Ground Stability Monitoring Network" />
+    <meta property="og:description" content="Real-time geospatial ground stability monitoring with multi-sensor correlation, risk scoring, and structural health analysis." />
+    <meta property="og:type" content="website" />
     <!-- Google Fonts: Inter (UI) and JetBrains Mono (Readouts) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   </head>
-  <body class="bg-surface-base text-slate-300 font-sans antialiased min-h-screen selection:bg-teal-500/30">
+  <body class="bg-bg-base text-text-secondary font-sans antialiased min-h-screen selection:bg-brand-teal-light">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

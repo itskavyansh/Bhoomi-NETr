@@ -75,15 +75,15 @@ export function AnimatedNumber({
     }
   }, [value]);
 
-  let baseColorClass = "text-white";
-  if (severity === "CRITICAL") baseColorClass = "text-red-500";
-  else if (severity === "WARNING") baseColorClass = "text-amber-500";
+  let baseColorClass = "text-[var(--telemetry-healthy)]";
+  if (severity === "CRITICAL") baseColorClass = "text-[var(--telemetry-critical)]";
+  else if (severity === "WARNING") baseColorClass = "text-[var(--telemetry-warning)]";
 
   let flashClass = "";
   if (isFlashing) {
-    if (severity === "CRITICAL") flashClass = "text-red-400 drop-shadow-[0_0_8px_rgba(239,68,68,0.8)] scale-105";
-    else if (severity === "WARNING") flashClass = "text-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] scale-105";
-    else flashClass = "text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)] scale-105";
+    if (severity === "CRITICAL") flashClass = "text-[var(--telemetry-critical)] drop-shadow-[0_0_8px_rgba(239,68,68,0.5)] scale-105";
+    else if (severity === "WARNING") flashClass = "text-[var(--telemetry-warning)] drop-shadow-[0_0_8px_rgba(245,158,11,0.5)] scale-105";
+    else flashClass = "text-[var(--telemetry-healthy)] drop-shadow-[0_0_8px_rgba(16,185,129,0.5)] scale-105";
   }
 
   return (
