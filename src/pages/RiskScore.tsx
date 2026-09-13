@@ -73,13 +73,12 @@ export function RiskScore() {
   const lowNodes = readings.filter((r) => r.risk_level === "LOW").length;
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+    <main className="dashboard-shell py-10 lg:py-12">
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-5">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-100 md:text-4xl">
-            SUBSIDENCE RISK SCORE & BREAKDOWN
-          </h1>
-          <p className="mt-1 text-sm text-slate-400">
+          <p className="eyebrow mb-2">Decision support</p>
+          <h1 className="page-title">Subsidence risk score</h1>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400">
             Multi-sensor correlated subsidence risk evaluation, progression trends, and contributing factor analysis
           </p>
         </div>

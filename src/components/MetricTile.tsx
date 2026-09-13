@@ -55,15 +55,15 @@ export function MetricTile({
   return (
     <div
       className={`flex flex-col rounded-lg border ${severityBorder} ${
-        isLarge ? "px-5 py-4" : "px-3 py-2"
+        isLarge ? "px-5 py-4" : "px-3 py-2.5"
       } transition-colors duration-300 h-full`}
     >
       <div className="flex-1">
-        <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+        <p className="min-w-0 whitespace-nowrap text-[0.62rem] font-semibold uppercase leading-tight tracking-[0.035em] text-slate-500">
           {label}
         </p>
         <p
-          className={`mt-1 font-mono font-bold ${
+            className={`mt-1 min-w-0 whitespace-nowrap font-mono font-bold tracking-tight ${
             isLarge ? "text-3xl" : "text-2xl"
           }`}
         >

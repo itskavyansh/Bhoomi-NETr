@@ -11,7 +11,6 @@ import { Link } from "react-router-dom";
 import { DataStatus } from "../components/DataStatus";
 import { LiveIndicator } from "../components/LiveIndicator";
 import { StatusBadge } from "../components/StatusBadge";
-import { AlertHistoryPanel } from "../components/AlertHistoryPanel";
 import { fetchLatestReadings, subscribeToReadings } from "../services/sensorService";
 import type { SensorReading } from "../types/sensor";
 
@@ -31,10 +30,10 @@ interface StatCardProps {
 
 function StatCard({ label, value, icon, accentClass }: StatCardProps) {
   return (
-    <div className={`rounded-xl border border-surface-border bg-surface-card p-5 shadow-lg shadow-black/40 ${accentClass}`}>
-      <div className="mb-3">{icon}</div>
-      <p className="text-3xl font-mono font-bold text-white">{value}</p>
-      <p className="mt-1 text-xs font-medium uppercase tracking-wider text-slate-500">{label}</p>
+    <div className={`rounded-xl border border-surface-border bg-surface-card/90 p-5 shadow-[0_12px_28px_rgba(0,0,0,0.16)] ${accentClass}`}>
+      <div className="mb-5 flex items-center justify-between">{icon}<span className="font-mono text-[0.65rem] text-slate-600">LIVE</span></div>
+      <p className="text-3xl font-mono font-bold tracking-tight text-slate-100">{value}</p>
+      <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">{label}</p>
     </div>
   );
 }
@@ -88,23 +87,22 @@ export function Home() {
   const criticalCount = countByStatus(readings, "CRITICAL");
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
-      <div className="flex flex-col gap-8 lg:flex-row">
-        {/* Left Column: Main Content */}
-        <div className="flex-1 min-w-0">
-          <section className="relative rounded-2xl border border-surface-border bg-surface-card px-6 py-12 text-center shadow-lg shadow-black/40 sm:px-12 animate-grid-flow">
-            <h1 className="text-3xl font-bold tracking-tight text-slate-100 md:text-4xl">
-              Mine Subsidence Monitoring System
+    <main className="dashboard-shell py-10 lg:py-12">
+      <div className="mx-auto max-w-5xl">
+          <section className="relative overflow-hidden rounded-2xl border border-surface-border bg-surface-card/90 px-6 py-14 text-center shadow-[0_20px_50px_rgba(0,0,0,0.22)] sm:px-12 animate-grid-flow">
+            <p className="eyebrow mb-4">Operational intelligence for safer ground</p>
+            <h1 className="page-title mx-auto max-w-2xl">
+              Know what the ground is doing before it becomes a problem.
             </h1>
             <div className="mt-4 flex justify-center">
               <LiveIndicator />
             </div>
-            <p className="mx-auto mt-3 max-w-2xl text-sm font-medium text-slate-400 md:text-base">
-              Real-time structural health monitoring for underground mine sites
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-slate-400 md:text-base">
+              A calm, live view of movement, sensor reliability, and subsidence risk across your underground site.
             </p>
             <Link
               to="/dashboard"
-              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-teal-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:scale-105 hover:bg-teal-500"
+              className="mt-7 inline-flex items-center gap-2 rounded-lg bg-teal-400 px-5 py-2.5 text-sm font-bold text-[#06202a] shadow-[0_8px_20px_rgba(59,195,190,0.16)] transition hover:bg-teal-300"
             >
               Open Live Dashboard
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -157,7 +155,7 @@ export function Home() {
               </section>
 
               <section className="mt-12">
-                <h2 className="mb-5 text-xl font-bold tracking-tight text-slate-100">Nodes</h2>
+                <div className="mb-5 flex items-end justify-between gap-4"><div><p className="eyebrow mb-1">Current fleet</p><h2 className="text-xl font-bold tracking-tight text-slate-100">Monitored nodes</h2></div><span className="text-xs text-slate-500">Select a node for details</span></div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   {readings.map((reading) => {
                     const borderClass = 
@@ -182,12 +180,6 @@ export function Home() {
               </section>
             </>
           )}
-        </div>
-
-        {/* Right Column: Alert History */}
-        <div className="lg:w-[30%] lg:flex-none lg:ml-auto h-[800px] lg:h-[calc(100vh-6rem)] lg:sticky lg:top-8 text-left">
-          <AlertHistoryPanel showFilters={true} />
-        </div>
       </div>
     </main>
   );

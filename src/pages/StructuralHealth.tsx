@@ -109,13 +109,12 @@ export function StructuralHealth() {
       : 0;
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+    <main className="dashboard-shell py-10 lg:py-12">
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-5">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-100 md:text-4xl">
-            STRUCTURAL & SENSOR HEALTH
-          </h1>
-          <p className="mt-1 text-sm text-slate-400">
+          <p className="eyebrow mb-2">Telemetry integrity</p>
+          <h1 className="page-title">Structural & sensor health</h1>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400">
             Real-time telemetry quality, transducer plausibility, and operational reliability across all sensor nodes
           </p>
         </div>

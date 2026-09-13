@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Navbar } from "./components/Navbar";
 import { NotificationPanel } from "./components/NotificationPanel";
+import { Alerts } from "./pages/Alerts";
 import { Dashboard } from "./pages/Dashboard";
 import { Home } from "./pages/Home";
 import { NodeDetail } from "./pages/NodeDetail";
@@ -11,7 +12,7 @@ import { TrendAnalysis } from "./pages/TrendAnalysis";
 export function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-surface-base text-slate-300 selection:bg-teal-500/30">
+      <div className="min-h-screen bg-surface-base text-slate-300">
         <Navbar />
         <Routes>
           <Route path="/" element={<Home />} />
@@ -20,6 +21,7 @@ export function App() {
           <Route path="/risk-score" element={<RiskScore />} />
           <Route path="/node/:nodeId" element={<NodeDetail />} />
           <Route path="/trend-analysis" element={<TrendAnalysis />} />
+          <Route path="/alerts" element={<Alerts />} />
         </Routes>
         <NotificationPanel />
       </div>

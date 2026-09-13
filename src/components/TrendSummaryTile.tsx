@@ -84,11 +84,11 @@ export function TrendSummaryTile({
 
   return (
     <div
-      className={`relative flex flex-col justify-between overflow-hidden rounded-xl border p-5 shadow-lg shadow-black/40 transition-all duration-300 ${borderAccent}`}
+      className={`relative flex min-h-[188px] flex-col justify-between overflow-hidden rounded-2xl border p-5 shadow-[0_14px_34px_rgba(0,0,0,0.16)] transition-all duration-300 ${borderAccent}`}
     >
       <div>
         <div className="flex items-center justify-between gap-2">
-          <span className="text-xs font-medium uppercase tracking-wider text-slate-400">
+          <span className="min-w-0 whitespace-nowrap text-[0.66rem] font-semibold uppercase tracking-[0.06em] text-slate-400">
             {label}
           </span>
           {statusBadge}
@@ -146,4 +146,3 @@ export function TrendSummaryTile({
     </div>
   );
 }
-

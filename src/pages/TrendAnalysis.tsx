@@ -156,72 +156,38 @@ export function TrendAnalysis() {
   }, [selectedNode, history]);
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
-      {/* Top Header & Node / Time Range Selectors */}
-      <header className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-100 md:text-4xl">
-            TREND ANALYSIS & PREDICTION
-          </h1>
-          <p className="mt-1 text-sm text-slate-400">
-            Advanced subsidence kinematics, progression detection, and early warning projection
-          </p>
+    <main className="dashboard-shell py-10 lg:py-12">
+      <header className="mb-8 flex flex-col gap-6">
+        <div className="flex flex-wrap items-end justify-between gap-5">
+          <div>
+            <p className="eyebrow mb-2">Telemetry intelligence</p>
+            <h1 className="page-title">Trend analysis & prediction</h1>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400">Explore subsidence kinematics, progression signals, and early-warning projections for one monitoring node at a time.</p>
+          </div>
+          {!loading && !error && <LiveIndicator />}
         </div>
 
-        {/* Controls: Live Indicator, Node Selector & Time Range */}
-        <div className="flex flex-wrap items-center gap-3">
-          {!loading && !error && <LiveIndicator />}
+        <div className="panel-surface flex flex-col gap-5 rounded-2xl p-4 sm:p-5 lg:flex-row lg:items-end lg:justify-between">
+          <label className="block min-w-0 lg:w-56">
+            <span className="eyebrow mb-2 block">Monitoring node</span>
+            <select value={selectedNode} onChange={(event) => handleSelectNode(event.target.value)} className="w-full rounded-lg border border-surface-border bg-surface-tile px-3 py-2.5 font-mono text-sm font-semibold text-slate-100 outline-none transition focus:border-teal-300/60">
+              {availableNodes.map((nodeId) => <option key={nodeId} value={nodeId}>{nodeId}</option>)}
+            </select>
+          </label>
 
-          {/* Node Selector Pills */}
-          <div className="flex items-center rounded-xl border border-surface-border bg-surface-card p-1 shadow-md">
-            {availableNodes.map((nodeId) => {
-              const active = nodeId === selectedNode;
-              return (
-                <button
-                  key={nodeId}
-                  onClick={() => handleSelectNode(nodeId)}
-                  className={`rounded-lg px-3 py-1.5 font-mono text-xs font-bold transition-all ${
-                    active
-                      ? "bg-teal-600/20 text-teal-400 border border-teal-500/30 shadow-sm"
-                      : "text-slate-400 hover:bg-white/5 hover:text-white border border-transparent"
-                  }`}
-                >
-                  {nodeId}
-                </button>
-              );
-            })}
+          <div className="min-w-0 flex-1">
+            <span className="eyebrow mb-2 block">Time window</span>
+            <div className="grid grid-cols-2 gap-1 rounded-lg border border-surface-border bg-surface-tile p-1 sm:grid-cols-5">
+              {TIME_RANGES.map((r) => {
+                const active = r.id === timeRange;
+                return <button key={r.id} onClick={() => setTimeRange(r.id)} className={`rounded-md px-2 py-2 text-xs font-semibold transition ${active ? "bg-teal-300/10 text-teal-200 shadow-sm" : "text-slate-400 hover:bg-white/[0.04] hover:text-slate-100"}`}>{r.label}</button>;
+              })}
+            </div>
           </div>
 
-          {/* Time Range Selector */}
-          <div className="flex items-center rounded-xl border border-surface-border bg-surface-card p-1 shadow-md">
-            {TIME_RANGES.map((r) => {
-              const active = r.id === timeRange;
-              return (
-                <button
-                  key={r.id}
-                  onClick={() => setTimeRange(r.id)}
-                  className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all ${
-                    active
-                      ? "bg-white/10 text-white font-semibold shadow-sm border border-white/10"
-                      : "text-slate-400 hover:bg-white/5 hover:text-white border border-transparent"
-                  }`}
-                >
-                  {r.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Refresh Button */}
-          <button
-            onClick={() => {
-              setIsRefreshing(true);
-              void loadHistory(selectedNode, timeRange);
-            }}
-            title="Refresh historical data"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-surface-border bg-surface-card text-slate-400 hover:bg-white/5 hover:text-white transition-colors shadow-sm"
-          >
+          <button onClick={() => { setIsRefreshing(true); void loadHistory(selectedNode, timeRange); }} title="Refresh historical data" className="flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg border border-surface-border bg-surface-tile px-3 text-xs font-semibold text-slate-300 transition hover:border-teal-300/30 hover:text-teal-200 lg:w-10 lg:px-0">
             <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin text-teal-400" : ""}`} />
+            <span className="lg:hidden">Refresh</span>
           </button>
         </div>
       </header>

@@ -75,8 +75,8 @@ export function TrendChart({
   }
 
   return (
-    <div className="rounded-xl border border-surface-border bg-surface-card p-6 shadow-lg shadow-black/40">
-      <h3 className="mb-4 text-xs font-bold uppercase tracking-wider text-slate-500">{label}</h3>
+    <div className="rounded-2xl border border-surface-border bg-surface-card/90 p-5 shadow-[0_16px_36px_rgba(0,0,0,0.16)]">
+      <div className="mb-4 flex items-center justify-between gap-3"><h3 className="text-sm font-bold tracking-tight text-slate-200">{label}</h3><span className="h-2 w-2 rounded-full" style={{ backgroundColor: color, boxShadow: `0 0 12px ${color}` }} /></div>
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 10, right: 12, left: 4, bottom: 0 }}>

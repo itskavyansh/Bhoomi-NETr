@@ -25,8 +25,9 @@ export function AlertHistoryPanel({ nodeId, showFilters = false }: AlertHistoryP
   });
 
   return (
-    <div className="flex h-full flex-col rounded-xl border border-surface-border bg-surface-card shadow-lg shadow-black/40">
+    <div className="flex h-full flex-col rounded-xl border border-surface-border bg-surface-card/90 shadow-[0_16px_40px_rgba(0,0,0,0.18)]">
       <div className="border-b border-surface-border p-5">
+        <p className="eyebrow mb-1">Event stream</p>
         <h2 className="text-xl font-bold tracking-tight text-slate-100">
           Alert History
         </h2>
@@ -38,8 +39,8 @@ export function AlertHistoryPanel({ nodeId, showFilters = false }: AlertHistoryP
                 onClick={() => setFilter(f)}
                 className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                   filter === f
-                    ? "bg-slate-700 text-white"
-                    : "bg-surface-tile text-slate-400 hover:bg-white/5 hover:text-slate-300"
+                    ? "border border-teal-300/20 bg-teal-300/10 text-teal-200"
+                    : "border border-transparent bg-surface-tile text-slate-400 hover:border-surface-border hover:bg-white/5 hover:text-slate-300"
                 }`}
               >
                 {f === "ALL" ? "All" : f.charAt(0) + f.slice(1).toLowerCase()} 
@@ -88,7 +89,7 @@ export function AlertHistoryPanel({ nodeId, showFilters = false }: AlertHistoryP
               return (
                 <div 
                   key={t.id} 
-                  className={`flex items-start gap-3 rounded-lg border ${borderColor} bg-surface-tile p-3`}
+                  className={`flex items-start gap-3 rounded-lg border ${borderColor} bg-surface-tile/80 p-3 transition hover:bg-surface-tile`}
                 >
                   <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-surface-card text-xs font-bold ${textColor}`}>
                     {icon}

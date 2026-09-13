@@ -1,68 +1,147 @@
 @import "tailwindcss";
 
 @theme {
-  --color-surface-base: #020617; /* slate-950 */
-  --color-surface-panel: #1e293b; /* slate-800 */
-  --color-surface-card: #0f172a; /* slate-900 */
-  --color-surface-tile: rgba(30, 41, 59, 0.6); /* slate-800/60 equivalent */
-  
-  --color-surface-border: #334155; /* slate-700 */
-  --color-surface-border-hover: #475569; /* slate-600 */
-  
-  --color-status-normal: #10b981; /* emerald-500 */
-  --color-status-normal-bg: rgba(16, 185, 129, 0.15);
-  --color-status-normal-border: rgba(16, 185, 129, 0.3);
+  --color-surface-base: #07111f;
+  --color-surface-panel: #0c1a2a;
+  --color-surface-card: #102238;
+  --color-surface-tile: #142a43;
+  --color-surface-border: #223c57;
+  --color-surface-border-hover: #355977;
 
-  --color-status-watch: #f59e0b; /* amber-500 */
-  --color-status-watch-bg: rgba(245, 158, 11, 0.15);
-  --color-status-watch-border: rgba(245, 158, 11, 0.3);
-  --color-status-watch-tint: rgba(245, 158, 11, 0.05);
+  --color-status-normal: #39c38f;
+  --color-status-normal-bg: rgba(57, 195, 143, 0.12);
+  --color-status-normal-border: rgba(57, 195, 143, 0.28);
+  --color-status-watch: #e7ad52;
+  --color-status-watch-bg: rgba(231, 173, 82, 0.12);
+  --color-status-watch-border: rgba(231, 173, 82, 0.30);
+  --color-status-watch-tint: rgba(231, 173, 82, 0.06);
+  --color-status-critical: #ed6b73;
+  --color-status-critical-bg: rgba(237, 107, 115, 0.12);
+  --color-status-critical-border: rgba(237, 107, 115, 0.32);
+  --color-status-critical-tint: rgba(237, 107, 115, 0.06);
 
-  --color-status-critical: #ef4444; /* red-500 */
-  --color-status-critical-bg: rgba(239, 68, 68, 0.15);
-  --color-status-critical-border: rgba(239, 68, 68, 0.3);
-  --color-status-critical-tint: rgba(239, 68, 68, 0.05);
-
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-sans: "Inter", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
 }
 
-/* Pulsing animation strictly for critical state */
+:root {
+  color-scheme: dark;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  background: #07111f;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at 80% -10%, rgba(30, 111, 145, 0.16), transparent 32rem),
+    linear-gradient(180deg, #091726 0%, #07111f 46%, #06101c 100%);
+  color: #c7d5e3;
+  font-family: var(--font-sans);
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  background: rgba(65, 192, 190, 0.28);
+  color: #f5fbff;
+}
+
+:focus-visible {
+  outline: 2px solid #52c5c0;
+  outline-offset: 3px;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #07111f;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 3px solid #07111f;
+  border-radius: 999px;
+  background: #294660;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3b607d;
+}
+
 @keyframes critical-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-  70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(237, 107, 115, 0.18); }
+  50% { box-shadow: 0 0 0 5px rgba(237, 107, 115, 0); }
 }
 
 @keyframes critical-border-pulse {
-  0% { border-color: rgba(239, 68, 68, 0.3); }
-  50% { border-color: rgba(239, 68, 68, 0.6); }
-  100% { border-color: rgba(239, 68, 68, 0.3); }
+  0%, 100% { border-color: rgba(237, 107, 115, 0.30); }
+  50% { border-color: rgba(237, 107, 115, 0.60); }
 }
 
-@keyframes grid-flow {
-  0% { background-position: 0 0; }
-  100% { background-position: 40px 40px; }
-}
-
-.animate-critical-pulse {
-  animation: critical-pulse 2s infinite;
-}
-
-.animate-critical-border {
-  animation: critical-border-pulse 3s infinite ease-in-out;
-}
+.animate-critical-pulse { animation: critical-pulse 2.4s ease-in-out infinite; }
+.animate-critical-border { animation: critical-border-pulse 3.2s ease-in-out infinite; }
 
 .animate-grid-flow {
-  background-image: linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
-                    linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
-  background-size: 40px 40px;
-  animation: grid-flow 20s linear infinite;
+  background-image:
+    linear-gradient(rgba(123, 185, 201, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(123, 185, 201, 0.055) 1px, transparent 1px),
+    radial-gradient(circle at 50% 0%, rgba(38, 153, 164, 0.13), transparent 65%);
+  background-size: 36px 36px, 36px 36px, auto;
+  animation: none;
 }
 
 @utility hide-scrollbar {
   scrollbar-width: none;
-  &::-webkit-scrollbar {
-    display: none;
-  }
+  &::-webkit-scrollbar { display: none; }
+}
+
+@utility dashboard-shell {
+  width: 100%;
+  max-width: 1320px;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+  @media (width >= 640px) { padding-inline: 1.75rem; }
+  @media (width >= 1024px) { padding-inline: 2.25rem; }
+}
+
+@utility panel-surface {
+  border: 1px solid var(--color-surface-border);
+  background: linear-gradient(145deg, rgba(16, 34, 56, 0.96), rgba(10, 27, 44, 0.96));
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+}
+
+@utility eyebrow {
+  color: #71c8c5;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+@utility page-title {
+  color: #f3f7fa;
+  font-size: clamp(1.65rem, 3vw, 2.45rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
 }

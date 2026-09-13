@@ -53,11 +53,13 @@ export function Dashboard() {
   }, []);
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-3xl font-bold tracking-tight text-slate-100 md:text-4xl">
-          MINE SUBSIDENCE MONITORING
-        </h1>
+    <main className="dashboard-shell py-10 lg:py-12">
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-5">
+        <div>
+          <p className="eyebrow mb-2">Operations overview</p>
+          <h1 className="page-title">Live node dashboard</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">A real-time view of structural movement, sensor health, and active site conditions.</p>
+        </div>
         {!loading && !error && <LiveIndicator />}
       </div>
       <DataStatus loading={loading} error={error} />

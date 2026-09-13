@@ -38,11 +38,11 @@ export function NodeCard({ reading }: NodeCardProps) {
   );
 
   return (
-    <article className={`rounded-xl border p-6 shadow-lg shadow-black/40 transition-all duration-300 hover:scale-[1.02] hover:brightness-110 flex flex-col h-full ${cardStyleClass}`}>
+    <article className={`flex h-full flex-col rounded-xl border p-5 shadow-[0_14px_32px_rgba(0,0,0,0.16)] transition-all duration-300 hover:-translate-y-0.5 hover:border-surface-border-hover ${cardStyleClass}`}>
       <header className="mb-5 flex items-center justify-between gap-4">
-        <h2 className="text-lg font-bold tracking-wider text-slate-100">
+        <div><p className="eyebrow mb-1">Monitoring point</p><h2 className="text-lg font-bold tracking-tight text-slate-100">
           NODE {reading.node_id}
-        </h2>
+        </h2></div>
         <StatusBadge status={reading.status} />
       </header>
 

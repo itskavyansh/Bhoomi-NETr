@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { AlertHistoryPanel } from "../components/AlertHistoryPanel";
 import { DataStatus } from "../components/DataStatus";
 import { LiveIndicator } from "../components/LiveIndicator";
 import { MetricTile } from "../components/MetricTile";
@@ -166,7 +165,7 @@ export function NodeDetail() {
   }, [nodeId]);
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+    <main className="dashboard-shell py-10 lg:py-12">
       <div className="flex items-center justify-between">
         <Link
           to="/dashboard"
@@ -201,12 +200,13 @@ export function NodeDetail() {
       )}
 
       {!loading && !error && reading && (
-        <div className="mt-8 flex flex-col gap-8 lg:flex-row">
+        <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.75fr)] lg:items-start">
           {/* Left Column: Main Content */}
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0">
             <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-bold tracking-tight text-slate-100 md:text-4xl">
+                <p className="eyebrow mb-2">Node telemetry profile</p>
+                <h1 className="page-title">
                   NODE {reading.node_id}
                 </h1>
                 <p className="mt-1 text-xs text-slate-400">
@@ -236,8 +236,124 @@ export function NodeDetail() {
               </div>
             )}
 
+            {/* REQUIREMENT 4: SEPARATE REAL-TIME SENSOR TELEMETRY SECTION */}
+            <section className="mb-12">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-xl font-bold tracking-tight text-slate-100 flex items-center gap-2">
+                  <Radio className="h-5 w-5 text-teal-400" />
+                  Real-Time Sensor Telemetry
+                </h2>
+                <span className="text-xs text-slate-400">Live hardware channels</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+                <MetricTile 
+                  label="Tilt X" 
+                  value={reading.tilt_x} 
+                  unit="°" 
+                  size="lg" 
+                  activeFlags={Math.abs(reading.tilt_x) >= 15 ? reading.warnings.filter(w => w === "EXCESSIVE_TILT") : []} 
+                />
+                <MetricTile 
+                  label="Tilt Y" 
+                  value={reading.tilt_y} 
+                  unit="°" 
+                  size="lg" 
+                  activeFlags={Math.abs(reading.tilt_y) >= 15 ? reading.warnings.filter(w => w === "EXCESSIVE_TILT") : []} 
+                />
+                <MetricTile
+                  label="Vibration"
+                  value={reading.vibration}
+                  unit="g"
+                  size="lg"
+                  activeFlags={reading.warnings.filter(w => w === "HIGH_VIBRATION")}
+                />
+                <MetricTile
+                  label="Distance"
+                  value={reading.distance}
+                  unit="cm"
+                  size="lg"
+                />
+                <MetricTile
+                  label="Displacement"
+                  value={reading.displacement}
+                  unit="cm"
+                  size="lg"
+                  activeFlags={reading.warnings.filter(w => w === "ABNORMAL_DISPLACEMENT")}
+                />
+              </div>
+
+              {(() => {
+                const unmappedWarnings = reading.warnings.filter(w => 
+                  w !== "EXCESSIVE_TILT" && 
+                  w !== "HIGH_VIBRATION" && 
+                  w !== "ABNORMAL_DISPLACEMENT"
+                );
+                
+                if (unmappedWarnings.length === 0) return null;
+                
+                return (
+                  <ul className="mt-4 list-disc space-y-1 pl-5 text-sm font-medium text-status-critical text-left">
+                    {unmappedWarnings.map((warning) => (
+                      <li key={warning}>{warning}</li>
+                    ))}
+                  </ul>
+                );
+              })()}
+            </section>
+
+            {/* REQUIREMENT 4: SEPARATE HISTORICAL TRENDS SECTION */}
+            <section className="mt-8">
+              <h2 className="mb-6 text-xl font-bold tracking-tight text-slate-100 text-left">
+                Historical Trends
+              </h2>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <TrendChart
+                  data={history}
+                  dataKey="tilt_x"
+                  label="Tilt X"
+                  unit="°"
+                  color="#2563eb"
+                />
+                <TrendChart
+                  data={history}
+                  dataKey="tilt_y"
+                  label="Tilt Y"
+                  unit="°"
+                  color="#7c3aed"
+                />
+                <TrendChart
+                  data={history}
+                  dataKey="vibration"
+                  label="Vibration"
+                  unit="g"
+                  color="#d97706"
+                />
+                <TrendChart
+                  data={history}
+                  dataKey="distance"
+                  label="Distance"
+                  unit="cm"
+                  color="#0d9488"
+                />
+                <TrendChart
+                  data={history}
+                  dataKey="displacement"
+                  label="Displacement"
+                  unit="cm"
+                  color="#e11d48"
+                />
+              </div>
+            </section>
+          </div>
+
+          <aside className="min-w-0 space-y-6 lg:sticky lg:top-24">
+            <div className="hidden border-b border-surface-border/80 pb-3 lg:block">
+              <p className="eyebrow">Risk & reliability</p>
+              <p className="mt-1 text-xs text-slate-500">Decision context for {reading.node_id}</p>
+            </div>
             {/* SECTION 1 & 2: SEPARATE DEDICATED INTELLIGENCE SECTIONS */}
-            <div className="mb-10 grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div className="mb-0 grid grid-cols-1 gap-6">
               {/* REQUIREMENT 1: Separate Subsidence Risk Index Card */}
               <section className="rounded-2xl border border-surface-border bg-surface-card p-6 shadow-xl shadow-black/40 flex flex-col justify-between">
                 <div>
@@ -434,122 +550,7 @@ export function NodeDetail() {
                 )}
               </section>
             </div>
-
-            {/* REQUIREMENT 4: SEPARATE REAL-TIME SENSOR TELEMETRY SECTION */}
-            <section className="mb-12">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-bold tracking-tight text-slate-100 flex items-center gap-2">
-                  <Radio className="h-5 w-5 text-teal-400" />
-                  Real-Time Sensor Telemetry
-                </h2>
-                <span className="text-xs text-slate-400">Live hardware channels</span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-                <MetricTile 
-                  label="Tilt X" 
-                  value={reading.tilt_x} 
-                  unit="°" 
-                  size="lg" 
-                  activeFlags={Math.abs(reading.tilt_x) >= 15 ? reading.warnings.filter(w => w === "EXCESSIVE_TILT") : []} 
-                />
-                <MetricTile 
-                  label="Tilt Y" 
-                  value={reading.tilt_y} 
-                  unit="°" 
-                  size="lg" 
-                  activeFlags={Math.abs(reading.tilt_y) >= 15 ? reading.warnings.filter(w => w === "EXCESSIVE_TILT") : []} 
-                />
-                <MetricTile
-                  label="Vibration"
-                  value={reading.vibration}
-                  unit="g"
-                  size="lg"
-                  activeFlags={reading.warnings.filter(w => w === "HIGH_VIBRATION")}
-                />
-                <MetricTile
-                  label="Distance"
-                  value={reading.distance}
-                  unit="cm"
-                  size="lg"
-                />
-                <MetricTile
-                  label="Displacement"
-                  value={reading.displacement}
-                  unit="cm"
-                  size="lg"
-                  activeFlags={reading.warnings.filter(w => w === "ABNORMAL_DISPLACEMENT")}
-                />
-              </div>
-
-              {(() => {
-                const unmappedWarnings = reading.warnings.filter(w => 
-                  w !== "EXCESSIVE_TILT" && 
-                  w !== "HIGH_VIBRATION" && 
-                  w !== "ABNORMAL_DISPLACEMENT"
-                );
-                
-                if (unmappedWarnings.length === 0) return null;
-                
-                return (
-                  <ul className="mt-4 list-disc space-y-1 pl-5 text-sm font-medium text-status-critical text-left">
-                    {unmappedWarnings.map((warning) => (
-                      <li key={warning}>{warning}</li>
-                    ))}
-                  </ul>
-                );
-              })()}
-            </section>
-
-            {/* REQUIREMENT 4: SEPARATE HISTORICAL TRENDS SECTION */}
-            <section className="mt-8">
-              <h2 className="mb-6 text-xl font-bold tracking-tight text-slate-100 text-left">
-                Historical Trends
-              </h2>
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <TrendChart
-                  data={history}
-                  dataKey="tilt_x"
-                  label="Tilt X"
-                  unit="°"
-                  color="#2563eb"
-                />
-                <TrendChart
-                  data={history}
-                  dataKey="tilt_y"
-                  label="Tilt Y"
-                  unit="°"
-                  color="#7c3aed"
-                />
-                <TrendChart
-                  data={history}
-                  dataKey="vibration"
-                  label="Vibration"
-                  unit="g"
-                  color="#d97706"
-                />
-                <TrendChart
-                  data={history}
-                  dataKey="distance"
-                  label="Distance"
-                  unit="cm"
-                  color="#0d9488"
-                />
-                <TrendChart
-                  data={history}
-                  dataKey="displacement"
-                  label="Displacement"
-                  unit="cm"
-                  color="#e11d48"
-                />
-              </div>
-            </section>
-          </div>
-
-          {/* Right Column: Alert History */}
-          <div className="lg:w-[30%] lg:flex-none lg:ml-auto h-[800px] lg:h-[calc(100vh-8rem)] lg:sticky lg:top-8 text-left">
-            <AlertHistoryPanel nodeId={nodeId} showFilters={false} />
-          </div>
+          </aside>
         </div>
       )}
     </main>
