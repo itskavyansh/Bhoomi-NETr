@@ -59,6 +59,39 @@ export function NodeCard({ reading }: NodeCardProps) {
         />
       </div>
 
+      {/* Piezo Electric Acoustic Channel */}
+      <div className="mt-4 pt-3 border-t border-slate-800/80">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-[0.68rem] font-semibold uppercase tracking-wider text-teal-400">
+            PIEZO ELECTRIC
+          </p>
+          <span className="text-[10px] font-mono text-slate-500">ADS1115 (A0)</span>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          <div className="rounded-lg border border-surface-border bg-surface-tile px-2.5 py-2">
+            <p className="text-[0.62rem] font-semibold uppercase text-slate-400">Peak</p>
+            <p className="mt-0.5 font-mono text-sm font-bold text-slate-100">
+              {reading.piezo_peak != null ? reading.piezo_peak.toFixed(4) : "—"}
+              <span className="ml-1 text-[10px] font-normal text-slate-400">V</span>
+            </p>
+          </div>
+          <div className="rounded-lg border border-surface-border bg-surface-tile px-2.5 py-2">
+            <p className="text-[0.62rem] font-semibold uppercase text-slate-400">RMS</p>
+            <p className="mt-0.5 font-mono text-sm font-bold text-slate-100">
+              {reading.piezo_rms != null ? reading.piezo_rms.toFixed(4) : "—"}
+              <span className="ml-1 text-[10px] font-normal text-slate-400">V</span>
+            </p>
+          </div>
+          <div className="rounded-lg border border-surface-border bg-surface-tile px-2.5 py-2">
+            <p className="text-[0.62rem] font-semibold uppercase text-slate-400">Peak-to-Peak</p>
+            <p className="mt-0.5 font-mono text-sm font-bold text-slate-100">
+              {reading.piezo_peak_to_peak != null ? reading.piezo_peak_to_peak.toFixed(4) : "—"}
+              <span className="ml-1 text-[10px] font-normal text-slate-400">V</span>
+            </p>
+          </div>
+        </div>
+      </div>
+
       {unmappedWarnings.length > 0 && (
         <ul className="mt-5 list-disc space-y-1 pl-5 text-sm font-medium text-status-critical">
           {sortWarnings(unmappedWarnings).map((warning) => (

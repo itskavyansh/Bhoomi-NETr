@@ -7,8 +7,10 @@ export interface SensorHealthState {
   hcsr04: "GOOD" | "UNSTABLE" | "INVALID" | "BAD";
   connectivity: "GOOD" | "UNSTABLE" | "OFFLINE";
   data_quality: "GOOD" | "DEGRADED" | "INVALID";
+  ads1115: "GOOD" | "UNSTABLE" | "INVALID" | "BAD";
   mpu6050_status?: "ok" | "fault" | null;
   hc_sr04_status?: "ok" | "fault" | null;
+  ads1115_status?: "ok" | "fault" | null;
   issues?: string[];
 }
 
@@ -31,6 +33,10 @@ export interface SensorReading {
   sensor_health: SensorHealthState;
   mpu6050_status?: "ok" | "fault" | null;
   hc_sr04_status?: "ok" | "fault" | null;
+  ads1115_status?: "ok" | "fault" | null;
+  piezo_peak?: number | null;
+  piezo_rms?: number | null;
+  piezo_peak_to_peak?: number | null;
   confidence_warning?: string | null;
 }
 
@@ -42,7 +48,17 @@ export interface TimePoint {
   distance: number;
   displacement: number;
   risk_score?: number;
+  piezo_peak?: number | null;
+  piezo_rms?: number | null;
+  piezo_peak_to_peak?: number | null;
 }
+
+export type {
+  VibrationLevel,
+  CrackActivityLevel,
+  DetectionInterpretation,
+  DetectionResult,
+} from "../services/detectionAdapter";
 
 // Keep in sync with Person 1's schema (`sensor_readings` table columns).
 export type RawSensorRow = {
@@ -56,4 +72,8 @@ export type RawSensorRow = {
   displacement?: number | null;
   mpu6050_status?: "ok" | "fault" | null;
   hc_sr04_status?: "ok" | "fault" | null;
+  ads1115_status?: "ok" | "fault" | null;
+  piezo_peak?: number | null;
+  piezo_rms?: number | null;
+  piezo_peak_to_peak?: number | null;
 };

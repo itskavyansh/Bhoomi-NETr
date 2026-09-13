@@ -37,6 +37,10 @@ interface SensorPayload {
     displacement?: number;
     mpu6050_status: string;
     hc_sr04_status: string;
+    ads1115_status?: string | null;
+    piezo_peak?: number | null;
+    piezo_rms?: number | null;
+    piezo_peak_to_peak?: number | null;
 }
 
 interface ValidationError {
@@ -89,18 +93,44 @@ function validate(body: Record<string, unknown>): ValidationError[] {
     }
 
     for (const field of ["mpu6050_status", "hc_sr04_status"] as const) {
-    const val = body[field];
+        const val = body[field];
 
-    if (val === undefined || val === null) {
-        errors.push({ field, reason: "required but missing" });
-    } else if (
-        typeof val !== "string" ||
-        !["ok", "fault"].includes(val)
-    ) {
-        errors.push({
-            field,
-            reason: "must be either 'ok' or 'fault'",
+        if (val === undefined || val === null) {
+            errors.push({ field, reason: "required but missing" });
+        } else if (
+            typeof val !== "string" ||
+            !["ok", "fault"].includes(val)
+        ) {
+            errors.push({
+                field,
+                reason: "must be either 'ok' or 'fault'",
             });
+        }
+    }
+
+    // Optional ads1115_status validation: must be 'ok' or 'fault' if present
+    if (body.ads1115_status !== undefined && body.ads1115_status !== null) {
+        if (
+            typeof body.ads1115_status !== "string" ||
+            !["ok", "fault"].includes(body.ads1115_status)
+        ) {
+            errors.push({
+                field: "ads1115_status",
+                reason: "must be either 'ok' or 'fault' if provided",
+            });
+        }
+    }
+
+    // Optional piezo telemetry validation: must be numbers if present
+    for (const field of ["piezo_peak", "piezo_rms", "piezo_peak_to_peak"] as const) {
+        const val = body[field];
+        if (val !== undefined && val !== null) {
+            if (typeof val !== "number" || isNaN(val)) {
+                errors.push({
+                    field,
+                    reason: `must be a valid number if provided, got ${typeof val}`,
+                });
+            }
         }
     }
 
@@ -183,6 +213,10 @@ Deno.serve(async (req: Request) => {
         displacement: payload.displacement,
         mpu6050_status: payload.mpu6050_status,
         hc_sr04_status: payload.hc_sr04_status,
+        ads1115_status: payload.ads1115_status,
+        piezo_peak: payload.piezo_peak,
+        piezo_rms: payload.piezo_rms,
+        piezo_peak_to_peak: payload.piezo_peak_to_peak,
     };
 
     // Supabase client — service role bypasses RLS (safe because Edge Functions are server-side)

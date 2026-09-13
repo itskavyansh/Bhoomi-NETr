@@ -24,6 +24,8 @@ function isRawSensorRow(value: unknown): value is RawSensorRow {
 
   const isValidStatus = (s: unknown) =>
     s === undefined || s === null || s === "ok" || s === "fault";
+  const isValidNullableNumber = (n: unknown) =>
+    n === undefined || n === null || (typeof n === "number" && !isNaN(n));
 
   return (
     (typeof value.id === "string" || typeof value.id === "number") &&
@@ -35,7 +37,11 @@ function isRawSensorRow(value: unknown): value is RawSensorRow {
     typeof value.distance === "number" &&
     (typeof value.displacement === "number" || value.displacement == null) &&
     isValidStatus(value.mpu6050_status) &&
-    isValidStatus(value.hc_sr04_status)
+    isValidStatus(value.hc_sr04_status) &&
+    isValidStatus(value.ads1115_status) &&
+    isValidNullableNumber(value.piezo_peak) &&
+    isValidNullableNumber(value.piezo_rms) &&
+    isValidNullableNumber(value.piezo_peak_to_peak)
   );
 }
 
@@ -84,7 +90,7 @@ export async function fetchLatestReadings(): Promise<SensorReading[]> {
   try {
     const { data, error } = await supabase
       .from("sensor_readings")
-      .select("id, node_id, timestamp, tilt_x, tilt_y, vibration, distance, displacement, mpu6050_status, hc_sr04_status")
+      .select("id, node_id, timestamp, tilt_x, tilt_y, vibration, distance, displacement, mpu6050_status, hc_sr04_status, ads1115_status, piezo_peak, piezo_rms, piezo_peak_to_peak")
       .lte("timestamp", new Date().toISOString())
       .order("timestamp", { ascending: false })
       .limit(LATEST_ROW_WINDOW);
@@ -143,7 +149,7 @@ export async function fetchNodeHistory(
   try {
     let query = supabase
       .from("sensor_readings")
-      .select("id, node_id, timestamp, tilt_x, tilt_y, vibration, distance, displacement, mpu6050_status, hc_sr04_status")
+      .select("id, node_id, timestamp, tilt_x, tilt_y, vibration, distance, displacement, mpu6050_status, hc_sr04_status, ads1115_status, piezo_peak, piezo_rms, piezo_peak_to_peak")
       .eq("node_id", nodeId)
       .lte("timestamp", new Date().toISOString())
       .order("timestamp", { ascending: false });
@@ -192,6 +198,9 @@ export async function fetchNodeHistory(
         distance: row.distance,
         displacement: analyzed.displacement,
         risk_score: analyzed.risk_score,
+        piezo_peak: row.piezo_peak,
+        piezo_rms: row.piezo_rms,
+        piezo_peak_to_peak: row.piezo_peak_to_peak,
       };
     });
   } catch (error) {
@@ -217,7 +226,7 @@ export async function fetchAlertHistory(limit = 1000): Promise<AlertTransition[]
   try {
     const { data, error } = await supabase
       .from("sensor_readings")
-      .select("id, node_id, timestamp, tilt_x, tilt_y, vibration, distance, displacement, mpu6050_status, hc_sr04_status")
+      .select("id, node_id, timestamp, tilt_x, tilt_y, vibration, distance, displacement, mpu6050_status, hc_sr04_status, ads1115_status, piezo_peak, piezo_rms, piezo_peak_to_peak")
       .lte("timestamp", new Date().toISOString())
       .order("timestamp", { ascending: false })
       .limit(limit);

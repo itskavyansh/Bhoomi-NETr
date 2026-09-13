@@ -55,6 +55,7 @@ export function evaluateSensorHealth(
   // Hardware diagnostic status from firmware
   const mpuFault = raw.mpu6050_status === "fault";
   const hcsr04Fault = raw.hc_sr04_status === "fault";
+  const ads1115Fault = raw.ads1115_status === "fault";
 
   if (mpuFault) {
     penalty += 50;
@@ -64,10 +65,15 @@ export function evaluateSensorHealth(
     penalty += 50;
     issues.push("HC-SR04 ultrasonic transducer reported fault status ('fault')");
   }
+  if (ads1115Fault) {
+    penalty += 50;
+    issues.push("ADS1115 ADC transducer reported fault status ('fault')");
+  }
 
   let mpuStatus: "GOOD" | "UNSTABLE" | "INVALID" | "BAD" = "GOOD";
   let hcsr04Status: "GOOD" | "UNSTABLE" | "INVALID" | "BAD" = "GOOD";
   let connectivityStatus: "GOOD" | "UNSTABLE" | "OFFLINE" = "GOOD";
+  let ads1115Status: "GOOD" | "UNSTABLE" | "INVALID" | "BAD" = "GOOD";
   let dataQualityStatus: DataQualityStatus = "GOOD";
 
   // 1. MPU6050 Tilt validation
@@ -144,9 +150,17 @@ export function evaluateSensorHealth(
     issues.push("Timestamp absent or malformed");
   }
 
+  // 6. ADS1115 / Piezo validation
+  if (raw.ads1115_status === "ok" && (raw.piezo_peak == null || raw.piezo_rms == null)) {
+    ads1115Status = "UNSTABLE";
+    penalty += 15;
+    issues.push("ADS1115 status OK but piezo telemetry absent or incomplete");
+  }
+
   // Hardware fault overrides
   if (mpuFault && mpuStatus === "GOOD") mpuStatus = "BAD";
   if (hcsr04Fault && hcsr04Status === "GOOD") hcsr04Status = "BAD";
+  if (ads1115Fault) ads1115Status = "BAD";
 
   // Overall Data Quality
   if (mpuStatus === "INVALID" || hcsr04Status === "INVALID") {
@@ -154,9 +168,11 @@ export function evaluateSensorHealth(
   } else if (
     mpuStatus === "UNSTABLE" ||
     hcsr04Status === "UNSTABLE" ||
+    ads1115Status === "UNSTABLE" ||
     connectivityStatus === "UNSTABLE" ||
     mpuFault ||
-    hcsr04Fault
+    hcsr04Fault ||
+    ads1115Fault
   ) {
     dataQualityStatus = "DEGRADED";
   } else {
@@ -166,13 +182,16 @@ export function evaluateSensorHealth(
   const confidenceScore = Math.max(0, Math.min(100, 100 - penalty));
 
   let confidenceWarning: string | null = null;
-  if (confidenceScore < 60 || mpuFault || hcsr04Fault) {
-    if (mpuFault && hcsr04Fault) {
+  if (confidenceScore < 60 || mpuFault || hcsr04Fault || ads1115Fault) {
+    const faultCount = (mpuFault ? 1 : 0) + (hcsr04Fault ? 1 : 0) + (ads1115Fault ? 1 : 0);
+    if (faultCount >= 2) {
       confidenceWarning = "LOW SENSOR CONFIDENCE: Hardware fault reported across sensors";
     } else if (mpuFault) {
       confidenceWarning = "LOW SENSOR CONFIDENCE: MPU6050 hardware fault reported";
     } else if (hcsr04Fault) {
       confidenceWarning = "LOW SENSOR CONFIDENCE: HC-SR04 hardware fault reported";
+    } else if (ads1115Fault) {
+      confidenceWarning = "LOW SENSOR CONFIDENCE: ADS1115 hardware fault reported";
     } else {
       confidenceWarning = `LOW SENSOR CONFIDENCE: ${issues[0] || "Unreliable sensor telemetry"}`;
     }
@@ -185,8 +204,10 @@ export function evaluateSensorHealth(
       hcsr04: hcsr04Status,
       connectivity: connectivityStatus,
       data_quality: dataQualityStatus,
+      ads1115: ads1115Status,
       mpu6050_status: mpuFault ? "fault" : (raw.mpu6050_status ?? null),
       hc_sr04_status: hcsr04Fault ? "fault" : (raw.hc_sr04_status ?? null),
+      ads1115_status: ads1115Fault ? "fault" : (raw.ads1115_status ?? null),
       issues,
     },
     confidence_warning: confidenceWarning,
@@ -320,6 +341,10 @@ export function analyzeReading(
     sensor_health: healthEvaluation.sensor_health,
     mpu6050_status: raw.mpu6050_status,
     hc_sr04_status: raw.hc_sr04_status,
+    ads1115_status: raw.ads1115_status,
+    piezo_peak: raw.piezo_peak ?? null,
+    piezo_rms: raw.piezo_rms ?? null,
+    piezo_peak_to_peak: raw.piezo_peak_to_peak ?? null,
     confidence_warning: healthEvaluation.confidence_warning,
   };
 }

@@ -3,13 +3,15 @@ import {
   AlertTriangle,
   ArrowLeft,
   CheckCircle,
+  Info,
   Radio,
   ShieldAlert,
   ShieldCheck,
   TrendingUp,
   XCircle,
+  Zap,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { DataStatus } from "../components/DataStatus";
 import { LiveIndicator } from "../components/LiveIndicator";
@@ -22,6 +24,10 @@ import {
   LIVE_HISTORY_LIMIT,
   subscribeToReadings,
 } from "../services/sensorService";
+import {
+  evaluateDetection,
+  type DetectionInterpretation,
+} from "../services/detectionAdapter";
 import type { SensorReading, TimePoint } from "../types/sensor";
 
 function toTimePoint(reading: SensorReading): TimePoint {
@@ -32,6 +38,10 @@ function toTimePoint(reading: SensorReading): TimePoint {
     vibration: reading.vibration,
     distance: reading.distance,
     displacement: reading.displacement,
+    risk_score: reading.risk_score,
+    piezo_peak: reading.piezo_peak,
+    piezo_rms: reading.piezo_rms,
+    piezo_peak_to_peak: reading.piezo_peak_to_peak,
   };
 }
 
@@ -77,6 +87,87 @@ function renderHealthBadge(status: string) {
   );
 }
 
+function renderInterpretationBadge(
+  interpretation: DetectionInterpretation | "CALIBRATING" | "NO_DATA"
+) {
+  if (interpretation === "NORMAL") {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold tracking-wider text-emerald-400 border border-emerald-500/30">
+        <CheckCircle className="h-3.5 w-3.5" />
+        NORMAL
+      </span>
+    );
+  }
+  if (interpretation === "STRUCTURAL VIBRATION") {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1 text-xs font-bold tracking-wider text-amber-400 border border-amber-500/30">
+        <AlertTriangle className="h-3.5 w-3.5" />
+        STRUCTURAL VIBRATION
+      </span>
+    );
+  }
+  if (interpretation === "POSSIBLE CRACK INITIATION") {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-500/15 px-3 py-1 text-xs font-bold tracking-wider text-purple-300 border border-purple-500/40 shadow-[0_0_12px_rgba(168,85,247,0.25)]">
+        <Activity className="h-3.5 w-3.5 text-purple-400" />
+        POSSIBLE CRACK INITIATION
+      </span>
+    );
+  }
+  if (interpretation === "CRITICAL STRUCTURAL EVENT") {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/20 px-3.5 py-1 text-xs font-bold tracking-wider text-rose-300 border border-rose-500/50 animate-pulse shadow-[0_0_16px_rgba(244,63,94,0.35)]">
+        <ShieldAlert className="h-3.5 w-3.5 text-rose-400" />
+        CRITICAL STRUCTURAL EVENT
+      </span>
+    );
+  }
+  if (interpretation === "CALIBRATING") {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-500/10 px-3 py-1 text-xs font-bold tracking-wider text-teal-400 border border-teal-500/30">
+        <Radio className="h-3.5 w-3.5 animate-pulse text-teal-400" />
+        CALIBRATING BASELINE
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-400 border border-slate-700">
+      NO PIEZO DATA
+    </span>
+  );
+}
+
+function renderIndexLevelBadge(
+  level: "LOW" | "HIGH" | "CALIBRATING" | "NO_DATA",
+  isHighCritical = false
+) {
+  if (level === "HIGH") {
+    return (
+      <span
+        className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-bold ${
+          isHighCritical
+            ? "bg-rose-500/15 text-rose-400 border border-rose-500/30"
+            : "bg-amber-500/15 text-amber-400 border border-amber-500/30"
+        }`}
+      >
+        HIGH
+      </span>
+    );
+  }
+  if (level === "LOW") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+        LOW
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium bg-slate-800 text-slate-400 border border-slate-700">
+      {level === "CALIBRATING" ? "CALIBRATING" : "NO DATA"}
+    </span>
+  );
+}
+
 function getRiskExplanation(reading: SensorReading): string {
   if (reading.risk_level === "CRITICAL") {
     return "Severe correlated ground subsidence detected across multiple sensor channels. Immediate structural inspection advised.";
@@ -106,6 +197,18 @@ export function NodeDetail() {
   const [history, setHistory] = useState<TimePoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const detection = useMemo(() => {
+    if (!reading) return null;
+    return evaluateDetection(
+      reading.node_id,
+      reading.vibration,
+      reading.piezo_peak,
+      reading.piezo_rms,
+      reading.piezo_peak_to_peak,
+      history
+    );
+  }, [reading, history]);
 
   useEffect(() => {
     let cancelled = false;
@@ -283,6 +386,44 @@ export function NodeDetail() {
                 />
               </div>
 
+              {/* Dedicated Piezo Electric Telemetry Block */}
+              <div className="mt-6 rounded-xl border border-teal-500/30 bg-slate-900/60 p-5 shadow-lg shadow-black/20">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Zap className="h-5 w-5 text-teal-400" />
+                    <h3 className="text-sm font-bold tracking-wider text-slate-100 uppercase">
+                      PIEZO ELECTRIC
+                    </h3>
+                  </div>
+                  <span className="rounded bg-teal-500/10 px-2 py-0.5 text-[10px] font-mono font-medium text-teal-300 border border-teal-500/20">
+                    ADS1115 · Channel A0
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <MetricTile
+                    label="Peak"
+                    value={reading.piezo_peak}
+                    unit="V"
+                    size="lg"
+                    decimals={4}
+                  />
+                  <MetricTile
+                    label="RMS"
+                    value={reading.piezo_rms}
+                    unit="V"
+                    size="lg"
+                    decimals={4}
+                  />
+                  <MetricTile
+                    label="Peak-to-Peak"
+                    value={reading.piezo_peak_to_peak}
+                    unit="V"
+                    size="lg"
+                    decimals={4}
+                  />
+                </div>
+              </div>
+
               {(() => {
                 const unmappedWarnings = reading.warnings.filter(w => 
                   w !== "EXCESSIVE_TILT" && 
@@ -343,6 +484,117 @@ export function NodeDetail() {
                   unit="cm"
                   color="#e11d48"
                 />
+                <TrendChart
+                  data={history}
+                  dataKey="piezo_peak"
+                  label="Piezo Peak Voltage"
+                  unit="V"
+                  color="#ec4899"
+                />
+                <TrendChart
+                  data={history}
+                  dataKey="piezo_rms"
+                  label="Piezo RMS Voltage"
+                  unit="V"
+                  color="#8b5cf6"
+                />
+                <TrendChart
+                  data={history}
+                  dataKey="piezo_peak_to_peak"
+                  label="Piezo Peak-to-Peak Voltage"
+                  unit="V"
+                  color="#06b6d4"
+                />
+              </div>
+            </section>
+
+            {/* REQUIREMENT: DERIVED DETECTION — VIBRATION & CRACK INDICES */}
+            <section className="mt-8 rounded-2xl border border-teal-500/30 bg-gradient-to-br from-slate-900/95 via-slate-900/70 to-teal-950/20 p-6 shadow-xl shadow-black/40">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Zap className="h-5 w-5 text-teal-400" />
+                    <h2 className="text-lg font-bold tracking-tight text-slate-100">
+                      Derived Detection: Vibration & Crack Indices
+                    </h2>
+                  </div>
+                  <p className="mt-1 text-xs text-slate-400">
+                    High-frequency acoustic shockwave vs macro structural resonance interpretation
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="rounded bg-teal-500/10 px-2 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-teal-400 border border-teal-500/30">
+                    DERIVED LAYER · NOT RAW TELEMETRY
+                  </span>
+                  {detection && renderInterpretationBadge(detection.interpretation)}
+                </div>
+              </div>
+
+              {/* Sub-grid: Vibration Index & Crack Index Tiles */}
+              <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+                {/* Vibration Index Tile */}
+                <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                      Macro Vibration Index
+                    </span>
+                    {detection && renderIndexLevelBadge(detection.vibrationLevel)}
+                  </div>
+                  <div className="mt-2 flex items-baseline gap-2">
+                    <span className="text-3xl font-mono font-bold text-white">
+                      {reading.vibration.toFixed(3)}
+                    </span>
+                    <span className="text-xs font-semibold text-slate-400">g</span>
+                  </div>
+                  <p className="mt-2 text-xs text-slate-400 leading-relaxed">
+                    Evaluates bulk kinematic ground oscillations. Threshold:{" "}
+                    <span className="font-mono text-slate-300">1.00g</span>.
+                  </p>
+                </div>
+
+                {/* Crack Index Tile */}
+                <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                      High-Freq Crack Index
+                    </span>
+                    {detection && renderIndexLevelBadge(detection.crackLevel, true)}
+                  </div>
+                  <div className="mt-2 flex items-baseline gap-2">
+                    <span className="text-3xl font-mono font-bold text-white">
+                      {detection?.crackIndexValue !== null ? `${detection?.crackIndexValue.toFixed(2)}×` : "—"}
+                    </span>
+                    <span className="text-xs font-semibold text-slate-400">baseline</span>
+                  </div>
+                  <p className="mt-2 text-xs text-slate-400 leading-relaxed">
+                    Composite acoustic emission:{" "}
+                    <span className="font-mono text-slate-300">
+                      0.45·Peak ({detection?.peakRatio ?? "—"}×) + 0.30·P-P ({detection?.ppRatio ?? "—"}×) + 0.25·RMS ({detection?.rmsRatio ?? "—"}×)
+                    </span>
+                    . Threshold: <span className="font-mono text-slate-300">1.50×</span>.
+                  </p>
+                </div>
+              </div>
+
+              {/* Status explanation & persistence filter context */}
+              <div className="mt-4 rounded-xl bg-slate-950/60 p-3.5 border border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2 text-slate-300">
+                  <Info className="h-4 w-4 text-teal-400 flex-shrink-0" />
+                  <span>
+                    {detection?.interpretation === "NORMAL" && "Geological baseline stable. No micro-fracture acoustic bursts or bulk ground resonance detected."}
+                    {detection?.interpretation === "STRUCTURAL VIBRATION" && "High bulk vibration detected without high-frequency piezo bursts (mechanical resonance/machinery, not active rock fracture)."}
+                    {detection?.interpretation === "POSSIBLE CRACK INITIATION" && "High-frequency acoustic shock bursts detected with low bulk vibration (indicates rock crack initiation or micro-fracturing)."}
+                    {detection?.interpretation === "CRITICAL STRUCTURAL EVENT" && "Severe simultaneous bulk ground vibration and high-frequency acoustic shock (active failure propagation)."}
+                    {detection?.interpretation === "CALIBRATING" && `Calibrating baseline floor (${detection?.sampleCount ?? 0}/25 samples)...`}
+                    {detection?.interpretation === "NO_DATA" && "No piezo sensor telemetry available on this node."}
+                  </span>
+                </div>
+                <div className="text-right text-[11px] font-mono text-slate-500">
+                  {detection?.baselineStatus === "ESTABLISHED"
+                    ? `Baseline: Peak ${detection.baseline?.baseline_peak.toFixed(4)}V · RMS ${detection.baseline?.baseline_rms.toFixed(4)}V`
+                    : "Calibration in progress"}
+                  {" · 2/3 Consensus Active"}
+                </div>
               </div>
             </section>
           </div>
@@ -527,6 +779,10 @@ export function NodeDetail() {
                       <div className="flex items-center justify-between rounded-lg bg-slate-800/40 px-3 py-2 border border-slate-700/40">
                         <span className="text-xs text-slate-300 font-medium">HC-SR04 (Distance)</span>
                         {renderHealthBadge(reading.sensor_health.hcsr04)}
+                      </div>
+                      <div className="flex items-center justify-between rounded-lg bg-slate-800/40 px-3 py-2 border border-slate-700/40">
+                        <span className="text-xs text-slate-300 font-medium">ADS1115 (Piezo/ADC)</span>
+                        {renderHealthBadge(reading.sensor_health.ads1115)}
                       </div>
                       <div className="flex items-center justify-between rounded-lg bg-slate-800/40 px-3 py-2 border border-slate-700/40">
                         <span className="text-xs text-slate-300 font-medium">Connectivity</span>

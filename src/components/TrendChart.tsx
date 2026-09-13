@@ -24,7 +24,10 @@ export type MetricKey =
   | "vibration"
   | "distance"
   | "displacement"
-  | "risk_score";
+  | "risk_score"
+  | "piezo_peak"
+  | "piezo_rms"
+  | "piezo_peak_to_peak";
 
 interface TrendChartProps {
   data: TimePoint[];

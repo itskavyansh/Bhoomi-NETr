@@ -8,8 +8,10 @@
 -- -----------------------------------------------------------------------------
 -- TABLE: sensor_readings
 -- Stores every raw reading pushed by a sensor node.
--- DO NOT add displacement, risk_score, status, warning_codes,
--- latitude, longitude, or battery until Phase 2 is agreed by the team.
+-- NOTE: ads1115_status, piezo_peak, piezo_rms, and piezo_peak_to_peak have been
+-- added because ESP32 firmware relies on ADS1115 piezo vibration telemetry.
+-- DO NOT add risk_score, status, warning_codes, latitude, longitude, or battery
+-- until Phase 2 is agreed by the team.
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.sensor_readings (
     -- Primary key — auto-incrementing bigint (handles billions of rows safely)
@@ -36,6 +38,12 @@ CREATE TABLE IF NOT EXISTS public.sensor_readings (
     -- Onboard hardware transducer diagnostic status ('ok' | 'fault')
     mpu6050_status  text,
     hc_sr04_status  text,
+
+    -- ADS1115 ADC & Piezo vibration sensor telemetry
+    ads1115_status      text,
+    piezo_peak          float8,
+    piezo_rms           float8,
+    piezo_peak_to_peak  float8,
 
     -- Server-side insert timestamp — always set by Supabase, never overwritten
     -- Use this for auditing and lag detection (created_at vs timestamp diff)

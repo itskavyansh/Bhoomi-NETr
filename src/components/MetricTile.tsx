@@ -10,9 +10,10 @@ import {
 
 interface MetricTileProps {
   label: string;
-  value: number;
+  value?: number | null;
   unit: string;
   size?: "md" | "lg";
+  decimals?: number;
   activeFlags?: string[];
 }
 
@@ -21,6 +22,7 @@ export function MetricTile({
   value,
   unit,
   size = "md",
+  decimals = 2,
   activeFlags = [],
 }: MetricTileProps) {
   const isLarge = size === "lg";
@@ -28,18 +30,20 @@ export function MetricTile({
   let severity: "NORMAL" | "WARNING" | "CRITICAL" = "NORMAL";
   let warnThreshold: number | null = null;
   
-  if (label.toLowerCase().includes("tilt")) {
-    warnThreshold = TILT_WARNING;
-    if (Math.abs(value) >= TILT_CRITICAL) severity = "CRITICAL";
-    else if (Math.abs(value) >= TILT_WARNING) severity = "WARNING";
-  } else if (label.toLowerCase() === "vibration") {
-    warnThreshold = VIBRATION_WARNING;
-    if (value >= VIBRATION_CRITICAL) severity = "CRITICAL";
-    else if (value >= VIBRATION_WARNING) severity = "WARNING";
-  } else if (label.toLowerCase() === "displacement") {
-    warnThreshold = DISPLACEMENT_WARNING;
-    if (Math.abs(value) >= DISPLACEMENT_CRITICAL) severity = "CRITICAL";
-    else if (Math.abs(value) >= DISPLACEMENT_WARNING) severity = "WARNING";
+  if (value != null) {
+    if (label.toLowerCase().includes("tilt")) {
+      warnThreshold = TILT_WARNING;
+      if (Math.abs(value) >= TILT_CRITICAL) severity = "CRITICAL";
+      else if (Math.abs(value) >= TILT_WARNING) severity = "WARNING";
+    } else if (label.toLowerCase() === "vibration") {
+      warnThreshold = VIBRATION_WARNING;
+      if (value >= VIBRATION_CRITICAL) severity = "CRITICAL";
+      else if (value >= VIBRATION_WARNING) severity = "WARNING";
+    } else if (label.toLowerCase() === "displacement") {
+      warnThreshold = DISPLACEMENT_WARNING;
+      if (Math.abs(value) >= DISPLACEMENT_CRITICAL) severity = "CRITICAL";
+      else if (Math.abs(value) >= DISPLACEMENT_WARNING) severity = "WARNING";
+    }
   }
 
   const severityBorder = 
@@ -67,7 +71,11 @@ export function MetricTile({
             isLarge ? "text-3xl" : "text-2xl"
           }`}
         >
-          <AnimatedNumber value={value} severity={severity} />
+          {value != null ? (
+            <AnimatedNumber value={value} severity={severity} decimals={decimals} />
+          ) : (
+            <span className="text-slate-500 font-mono">—</span>
+          )}
           <span
             className={`ml-1 font-sans font-semibold text-slate-400 ${
               isLarge ? "text-lg" : "text-sm"

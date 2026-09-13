@@ -127,6 +127,9 @@ export function TrendAnalysis() {
             distance: matching.distance,
             displacement: matching.displacement,
             risk_score: matching.risk_score,
+            piezo_peak: matching.piezo_peak,
+            piezo_rms: matching.piezo_rms,
+            piezo_peak_to_peak: matching.piezo_peak_to_peak,
           };
 
           // Filter out duplicates
@@ -391,6 +394,33 @@ export function TrendAnalysis() {
                 label="Subsidence Risk Score (0-100)"
                 unit=""
                 color="#10b981"
+              />
+
+              {/* Graph 5: Piezo Peak */}
+              <TrendChart
+                data={history}
+                dataKey="piezo_peak"
+                label="Piezo Peak Voltage (V)"
+                unit="V"
+                color="#ec4899"
+              />
+
+              {/* Graph 6: Piezo RMS */}
+              <TrendChart
+                data={history}
+                dataKey="piezo_rms"
+                label="Piezo RMS Voltage (V)"
+                unit="V"
+                color="#8b5cf6"
+              />
+
+              {/* Graph 7: Piezo Peak-to-Peak */}
+              <TrendChart
+                data={history}
+                dataKey="piezo_peak_to_peak"
+                label="Piezo Peak-to-Peak Voltage (V)"
+                unit="V"
+                color="#06b6d4"
               />
             </div>
           </section>
